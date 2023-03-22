@@ -10,9 +10,8 @@ import { TourGuide } from "../user/user.entity";
 
 @Entity()
 export class Tour extends BaseEntity {
-    @PrimaryGeneratedColumn("uuid", { name: "task_id" })
+    @PrimaryGeneratedColumn("uuid", { name: "tour_id" })
     id: string;
-
     @Column()
     name: string;
     @Column()
@@ -33,12 +32,15 @@ export class Tour extends BaseEntity {
     description: string;
     @Column()
     imageCover: string;
-    @OneToMany(() => TourImage, (tourImage) => tourImage.tour, {
-        cascade: true,
+    @OneToMany(() => TourImage, (tourImage) => tourImage.tour_id, {
+        cascade: ["insert", "update"],
         eager: true,
     })
     images: TourImage[];
 
-    @OneToMany(() => TourGuide, (tourGuide) => tourGuide.tour)
+    @OneToMany(() => TourGuide, (tourGuide) => tourGuide.tour, {
+        cascade: true,
+        eager: true,
+    })
     guides: string[];
 }

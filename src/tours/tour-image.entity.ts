@@ -15,6 +15,6 @@ export class TourImage extends BaseEntity {
     @Column({ default: "default.png" })
     image: string;
 
-    @ManyToOne(() => Tour, (tour) => tour.images)
-    tour: Tour;
+    @ManyToOne(() => Tour, (tour) => tour.images, { onDelete: "CASCADE" })
+    tour_id: Tour;
 }

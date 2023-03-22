@@ -1,6 +1,6 @@
 import { IsNotEmpty } from "class-validator";
 
-export class TourGuideDto {
+export class UpdateTourStatusDto {
     @IsNotEmpty()
-    id: string;
+    price: number;
 }
