@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateTourDTO } from "./dtos/create-tour.dto";
+import { UpdateTourDto } from "./dtos/update-tour.dto";
 import { TourImage } from "./tour-image.entity";
 import { Tour } from "./tour.entity";
 
@@ -113,14 +114,14 @@ export class ToursService {
         }
     }
 
-    async updateTour(id: string, partialTour: Partial<Tour>): Promise<Tour> {
+    async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tour> {
         const tour = await this.getTourById(id);
 
         if (!tour) {
             throw new NotFoundException(`Tour with id ${id} not found`);
         }
 
-        Object.assign(tour, partialTour);
+        Object.assign(tour, updateTourDto);
         await this.tourRepository.save(tour);
 
         return tour;

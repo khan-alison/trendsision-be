@@ -9,6 +9,7 @@ import {
     Query,
 } from "@nestjs/common";
 import { CreateTourDTO } from "./dtos/create-tour.dto";
+import { UpdateTourDto } from "./dtos/update-tour.dto";
 import { Tour } from "./tour.entity";
 import { ToursService } from "./tours.service";
 
@@ -56,7 +57,7 @@ export class ToursController {
     @Patch("/:id")
     async updateTour(
         @Param("id") id: string,
-        @Body() partialTour: Partial<Tour>
+        @Body() partialTour: UpdateTourDto
     ): Promise<Tour> {
         return await this.toursService.updateTour(id, partialTour);
     }
