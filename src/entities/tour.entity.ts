@@ -6,7 +6,7 @@ import {
     PrimaryGeneratedColumn,
 } from "typeorm";
 import { TourImage } from "./tour-image.entity";
-import { User } from "../users/user.entity";
+import { User } from "./user.entity";
 
 @Entity()
 export class Tour extends BaseEntity {

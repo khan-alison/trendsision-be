@@ -5,7 +5,7 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { Tour } from "../tours/tour.entity";
+import { Tour } from "./tour.entity";
 
 export enum ROLES {
     USER = "user",
@@ -19,7 +19,7 @@ export class User extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column()
+    @Column({ nullable: true, default: "phuongna" })
     name: string;
 
     @Column()
@@ -28,7 +28,7 @@ export class User extends BaseEntity {
     @Column({ type: "enum", enum: ROLES, default: ROLES.USER })
     role: ROLES;
 
-    @Column()
+    @Column({ default: "avatar.jpg" })
     photo: string;
 
     @Column()

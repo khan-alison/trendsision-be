@@ -7,13 +7,16 @@ import {
     Patch,
     Post,
     Query,
+    UseFilters,
 } from "@nestjs/common";
 import { CreateTourDTO } from "./dtos/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
-import { Tour } from "./tour.entity";
+import { Tour } from "../entities/tour.entity";
 import { ToursService } from "./tours.service";
+import { HttpExceptionFilter } from "src/utils/http_exception.filter";
 
 @Controller("tours")
+@UseFilters(new HttpExceptionFilter())
 export class ToursController {
     constructor(private toursService: ToursService) {
         this.toursService = toursService;

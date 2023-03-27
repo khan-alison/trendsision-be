@@ -1,4 +1,3 @@
-import { UsersService } from "./users.service";
 import {
     Body,
     Controller,
@@ -6,11 +5,12 @@ import {
     Get,
     Param,
     Patch,
-    Post,
+    // UseGuards,
 } from "@nestjs/common";
-import { CreateUserDto } from "./dtos/create_user_dto";
-import { User } from "./user.entity";
+// import { LocalAuthGuard } from "src/auth/local-auth.guard";
+import { User } from "../entities/user.entity";
 import { UpdateUserDto } from "./dtos/update_user.dto";
+import { UsersService } from "./users.service";
 
 @Controller("users")
 export class UserController {
@@ -28,10 +28,10 @@ export class UserController {
         return this.usersService.getUserById(id);
     }
 
-    @Post()
-    createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
-        return this.usersService.createUser(createUserDto);
-    }
+    // @Post()
+    // createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
+    //     return this.usersService.createUser(createUserDto);
+    // }
 
     @Patch("/:id")
     updateUser(
@@ -41,6 +41,7 @@ export class UserController {
         return this.updateUser(id, newUserInfo);
     }
 
+    // @UseGuards(LocalAuthGuard)
     @Delete("/:id")
     removeUser(@Param("id") id: string): Promise<void> {
         return this.usersService.removeUser(id);

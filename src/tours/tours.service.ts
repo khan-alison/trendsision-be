@@ -3,8 +3,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateTourDTO } from "./dtos/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
-import { TourImage } from "./tour-image.entity";
-import { Tour } from "./tour.entity";
+import { TourImage } from "../entities/tour-image.entity";
+import { Tour } from "../entities/tour.entity";
 
 @Injectable()
 export class ToursService {
