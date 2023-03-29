@@ -1,3 +1,4 @@
+import { ROLES } from "src/utils/constants";
 import {
     BaseEntity,
     Column,
@@ -6,13 +7,6 @@ import {
     PrimaryGeneratedColumn,
 } from "typeorm";
 import { Tour } from "./tour.entity";
-
-export enum ROLES {
-    USER = "user",
-    GUIDE = "guide",
-    LEAD_GUIDE = "lead_guide",
-    ADMIN = "admin",
-}
 
 @Entity()
 export class User extends BaseEntity {

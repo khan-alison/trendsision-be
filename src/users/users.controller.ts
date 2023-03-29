@@ -5,8 +5,12 @@ import {
     Get,
     Param,
     Patch,
-    // UseGuards,
+    UseGuards,
 } from "@nestjs/common";
+import { Roles } from "src/decorators/roles.decorator";
+import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
+import { RolesGuard } from "src/guards/roles.guard";
+import { ROLES } from "src/utils/constants";
 // import { LocalAuthGuard } from "src/auth/local-auth.guard";
 import { User } from "../entities/user.entity";
 import { UpdateUserDto } from "./dtos/update_user.dto";
@@ -23,15 +27,11 @@ export class UserController {
         return this.usersService.getAllUser();
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get("/:id")
     getUserById(@Param("id") id: string): Promise<User> {
         return this.usersService.getUserById(id);
     }
-
-    // @Post()
-    // createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
-    //     return this.usersService.createUser(createUserDto);
-    // }
 
     @Patch("/:id")
     updateUser(
@@ -41,8 +41,9 @@ export class UserController {
         return this.updateUser(id, newUserInfo);
     }
 
-    // @UseGuards(LocalAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Delete("/:id")
+    @Roles(ROLES.ADMIN)
     removeUser(@Param("id") id: string): Promise<void> {
         return this.usersService.removeUser(id);
     }

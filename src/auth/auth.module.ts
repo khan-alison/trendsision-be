@@ -6,7 +6,8 @@ import { User } from "src/entities/user.entity";
 import { UsersModule } from "src/users/users.module";
 import { jwtConstants } from "src/utils/constants";
 import { AuthService } from "./auth.service";
-import { LocalStrategy } from "./local.strategy";
+import { JwtStrategy } from "../strategies/jwt.strategy";
+import { LocalStrategy } from "../strategies/local.strategy";
 
 @Module({
     imports: [
@@ -14,11 +15,11 @@ import { LocalStrategy } from "./local.strategy";
         PassportModule,
         JwtModule.register({
             secret: jwtConstants.secret,
-            signOptions: { expiresIn: "60s" },
+            signOptions: { expiresIn: "60m" },
         }),
         TypeOrmModule.forFeature([User]),
     ],
-    providers: [AuthService, LocalStrategy],
+    providers: [AuthService, LocalStrategy, JwtStrategy],
     exports: [AuthService],
 })
 export class AuthModule {}

@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, UseGuards } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 import { Repository } from "typeorm";
 import { User } from "../entities/user.entity";
 import { UpdateUserDto } from "./dtos/update_user.dto";
@@ -18,6 +19,7 @@ export class UsersService {
         return users;
     }
 
+    @UseGuards(JwtAuthGuard)
     async getUserById(id: string): Promise<User> {
         const user = await this.usersService.findOne({ where: { id } });
         if (!user) {
@@ -26,13 +28,6 @@ export class UsersService {
             return user;
         }
     }
-
-    // async createUser(createUserDto: CreateUserDto): Promise<User> {
-    //     const { name, email, password, photo, role } = createUserDto;
-    //     const user = User.create({ name, email, role, photo, password });
-    //     await this.usersService.save(user);
-    //     return user;
-    // }
 
     async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
         const user = await this.usersService.findOne({ where: { id } });
