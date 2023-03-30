@@ -5,6 +5,7 @@ import {
     Get,
     Param,
     Patch,
+    Query,
     UseGuards,
 } from "@nestjs/common";
 import { Roles } from "src/decorators/roles.decorator";
@@ -22,9 +23,14 @@ export class UserController {
         this.usersService = usersService;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get()
-    getAllUsers(): Promise<User[]> {
-        return this.usersService.getAllUser();
+    getAllUsers(@Query() query: any): Promise<User[]> {
+        const filter = {
+            name: query.name,
+            email: query.email,
+        };
+        return this.usersService.getAllUser(filter);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -33,7 +39,9 @@ export class UserController {
         return this.usersService.getUserById(id);
     }
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Patch("/:id")
+    @Roles(ROLES.ADMIN, ROLES.LEAD_GUIDE)
     updateUser(
         @Param("id") id: string,
         @Body() newUserInfo: UpdateUserDto

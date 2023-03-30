@@ -28,6 +28,12 @@ export class User extends BaseEntity {
     @Column()
     password: string;
 
+    @Column({ nullable: true })
+    reset_token: string;
+
+    @Column({ type: "timestamp", nullable: true })
+    reset_token_expire: Date;
+
     @ManyToOne(() => Tour, (tour) => tour.guides)
     tour: Tour;
 }

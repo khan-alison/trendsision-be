@@ -8,6 +8,7 @@ import { jwtConstants } from "src/utils/constants";
 import { AuthService } from "./auth.service";
 import { JwtStrategy } from "../strategies/jwt.strategy";
 import { LocalStrategy } from "../strategies/local.strategy";
+import { MailService } from "./mail.service";
 
 @Module({
     imports: [
@@ -19,7 +20,7 @@ import { LocalStrategy } from "../strategies/local.strategy";
         }),
         TypeOrmModule.forFeature([User]),
     ],
-    providers: [AuthService, LocalStrategy, JwtStrategy],
+    providers: [AuthService, LocalStrategy, JwtStrategy, MailService],
     exports: [AuthService],
 })
 export class AuthModule {}

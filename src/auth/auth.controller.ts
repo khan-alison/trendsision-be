@@ -7,9 +7,11 @@ import {
 } from "@nestjs/common";
 import { User } from "src/entities/user.entity";
 import { CreateUserDto } from "src/users/dtos/create_user_dto";
-import { AuthService } from "./auth.service";
-import { LoginDto } from "./dtos/login.dto";
 import { LocalAuthGuard } from "../guards/local-auth.guard";
+import { AuthService } from "./auth.service";
+import { ForgotPasswordDto } from "./dtos/forgot-password.dto";
+import { LoginDto } from "./dtos/login.dto";
+import { ResetPasswordDto } from "./dtos/reset-password.dto";
 
 @Controller("auth")
 export class AuthController {
@@ -26,5 +28,19 @@ export class AuthController {
     async signIn(@Body() body: LoginDto) {
         const { email, password } = body;
         return this.authService.signIn(email, password);
+    }
+
+    @Post("/forgot-password")
+    async forgotPassword(
+        @Body(new ValidationPipe()) forgotPasswordDto: ForgotPasswordDto
+    ): Promise<void> {
+        return this.authService.forgotPassword(forgotPasswordDto);
+    }
+
+    @Post("/reset-password")
+    async resetPassword(
+        @Body() resetPasswordDto: ResetPasswordDto
+    ): Promise<void> {
+        await this.authService.resetPassword(resetPasswordDto);
     }
 }

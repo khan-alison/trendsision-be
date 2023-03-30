@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { CreateTourDTO } from "./dtos/create-tour.dto";
-import { UpdateTourDto } from "./dtos/update-tour.dto";
 import { TourImage } from "../entities/tour-image.entity";
 import { Tour } from "../entities/tour.entity";
+import { CreateTourDTO } from "./dtos/create-tour.dto";
+import { UpdateTourDto } from "./dtos/update-tour.dto";
 
 @Injectable()
 export class ToursService {
@@ -52,6 +52,12 @@ export class ToursService {
                     "tour.ratingsAverage >= :ratingsAverage",
                     { ratingsAverage: filter.ratingsAverage }
                 );
+            }
+
+            if (filter.name) {
+                queryBuilder.andWhere("tour.name LIKE :name", {
+                    name: `%${filter.name}%`,
+                });
             }
 
             if (filter.minDuration && filter.maxDuration) {
