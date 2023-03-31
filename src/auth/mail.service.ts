@@ -13,6 +13,8 @@ export class MailService {
                 user: process.env.USER_NAME,
                 pass: process.env.USER_PASSWORD,
             },
+            requireTLS: true,
+            secure: false,
         });
     }
 

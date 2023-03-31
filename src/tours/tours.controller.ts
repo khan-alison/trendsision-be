@@ -10,15 +10,15 @@ import {
     UseFilters,
     UseGuards,
 } from "@nestjs/common";
-import { CreateTourDTO } from "./dtos/create-tour.dto";
-import { UpdateTourDto } from "./dtos/update-tour.dto";
-import { Tour } from "../entities/tour.entity";
-import { ToursService } from "./tours.service";
-import { HttpExceptionFilter } from "src/utils/http_exception.filter";
 import { Roles } from "src/decorators/roles.decorator";
-import { ROLES } from "src/utils/constants";
 import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 import { RolesGuard } from "src/guards/roles.guard";
+import { ROLES } from "src/utils/constants";
+import { HttpExceptionFilter } from "src/utils/http_exception.filter";
+import { Tour } from "../entities/tour.entity";
+import { CreateTourDTO } from "./dtos/create-tour.dto";
+import { UpdateTourDto } from "./dtos/update-tour.dto";
+import { ToursService } from "./tours.service";
 
 @Controller("tours")
 @UseFilters(new HttpExceptionFilter())
@@ -74,8 +74,8 @@ export class ToursController {
     @Roles(ROLES.ADMIN, ROLES.LEAD_GUIDE)
     async updateTour(
         @Param("id") id: string,
-        @Body() partialTour: UpdateTourDto
+        @Body() updateTourDto: UpdateTourDto
     ): Promise<Tour> {
-        return await this.toursService.updateTour(id, partialTour);
+        return this.toursService.updateTour(id, updateTourDto);
     }
 }

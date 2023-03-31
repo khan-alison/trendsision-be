@@ -25,9 +25,8 @@ export class AuthController {
 
     @UseGuards(LocalAuthGuard)
     @Post("/signin")
-    async signIn(@Body() body: LoginDto) {
-        const { email, password } = body;
-        return this.authService.signIn(email, password);
+    async signIn(@Body() loginDto: LoginDto) {
+        return this.authService.signIn(loginDto);
     }
 
     @Post("/forgot-password")

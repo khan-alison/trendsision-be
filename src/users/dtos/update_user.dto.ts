@@ -1,24 +1,20 @@
-import { IsString, IsEmail, IsEnum, IsNotEmpty } from "class-validator";
+import { IsEmail, IsEnum, IsOptional, IsString } from "class-validator";
 import { ROLES } from "src/utils/constants";
 
 export class UpdateUserDto {
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     name?: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsEmail()
     email?: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsEnum(ROLES)
     role?: ROLES;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     photo?: string;
-
-    @IsNotEmpty()
-    @IsString()
-    password?: string;
 }

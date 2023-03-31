@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { TourImage } from "../entities/tour-image.entity";
@@ -91,7 +95,7 @@ export class ToursService {
     async getTourById(id: string): Promise<Tour> {
         const tour = await this.tourRepository.findOneBy({ id });
         if (!tour) {
-            throw new NotFoundException(`Task with id ${id} not found`);
+            throw new NotFoundException(`Tour with id ${id} not found`);
         } else {
             return tour;
         }
@@ -116,20 +120,21 @@ export class ToursService {
         const result = await this.tourRepository.delete(id);
 
         if (result.affected === 0) {
-            throw new NotFoundException(`Task with id ${id} not found`);
+            throw new NotFoundException(`Tour with id ${id} not found`);
         }
     }
 
     async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tour> {
-        const tour = await this.getTourById(id);
-
-        if (!tour) {
-            throw new NotFoundException(`Tour with id ${id} not found`);
+        try {
+            const tour = await this.getTourById(id);
+            if (!tour) {
+                throw new NotFoundException(`User with id ${id} not found`);
+            }
+            Object.assign(tour, updateTourDto);
+            await this.tourRepository.save(tour);
+            return tour;
+        } catch (error) {
+            throw new BadRequestException("Error");
         }
-
-        Object.assign(tour, updateTourDto);
-        await this.tourRepository.save(tour);
-
-        return tour;
     }
 }

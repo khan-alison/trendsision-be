@@ -14,6 +14,7 @@ import { CreateUserDto } from "src/users/dtos/create_user_dto";
 import { Repository } from "typeorm";
 import { promisify } from "util";
 import { ForgotPasswordDto } from "./dtos/forgot-password.dto";
+import { LoginDto } from "./dtos/login.dto";
 import { ResetPasswordDto } from "./dtos/reset-password.dto";
 import { MailService } from "./mail.service";
 
@@ -95,20 +96,23 @@ export class AuthService {
             const savedUser = await this.userRepository.save(newUser);
             delete savedUser.password;
             delete savedUser.reset_token;
-            delete savedUser.reset_token_expire;
             return savedUser;
         } catch (error) {
             throw new Error("Internal server error");
         }
     }
 
-    async signIn(email: string, password: string) {
-        const [user] = await this.userRepository.find({ where: { email } });
+    async signIn(loginDto: LoginDto) {
+        const [user] = await this.userRepository.find({
+            where: { email: loginDto.email },
+        });
         if (!user) {
-            throw new NotFoundException(`User with ${email} not found`);
+            throw new NotFoundException(
+                `User with ${loginDto.email} not found`
+            );
         }
 
-        if (await this.checkPassword(user.password, password)) {
+        if (await this.checkPassword(user.password, loginDto.password)) {
             throw new BadRequestException("Password is invalid");
         }
 
@@ -129,7 +133,6 @@ export class AuthService {
         const payload = { id: user.id, email: user.email, role: user.role };
         const reset_token = this.jwtService.sign(payload, { expiresIn: "5m" });
         user.reset_token = reset_token;
-        user.reset_token_expire = new Date(Date.now() + 5 * 60 * 1000);
 
         const forgotLink = `${process.env.APP_URL}/auth/reset-password?token=${reset_token}`;
 
@@ -156,7 +159,6 @@ export class AuthService {
 
             user.password = await this.hashPassword(resetPasswordDto.password);
             user.reset_token = null;
-            user.reset_token_expire = null;
 
             await this.userRepository.save(user);
         } catch (err) {

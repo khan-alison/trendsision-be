@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber } from "class-validator";
+import { IsOptional, IsString, IsNumber, Max, Min } from "class-validator";
 
 export class UpdateTourDto {
     @IsOptional()
@@ -19,6 +19,8 @@ export class UpdateTourDto {
 
     @IsOptional()
     @IsNumber()
+    @Max(5)
+    @Min(1)
     ratingsAverage?: number;
 
     @IsOptional()

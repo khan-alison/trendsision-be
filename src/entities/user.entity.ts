@@ -13,7 +13,7 @@ export class User extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column({ nullable: true, default: "phuongna" })
+    @Column({ nullable: true, default: "khanhdzai" })
     name: string;
 
     @Column()
@@ -30,9 +30,6 @@ export class User extends BaseEntity {
 
     @Column({ nullable: true })
     reset_token: string;
-
-    @Column({ type: "timestamp", nullable: true })
-    reset_token_expire: Date;
 
     @ManyToOne(() => Tour, (tour) => tour.guides)
     tour: Tour;

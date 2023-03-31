@@ -5,9 +5,9 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "src/entities/user.entity";
 import { UsersModule } from "src/users/users.module";
 import { jwtConstants } from "src/utils/constants";
-import { AuthService } from "./auth.service";
 import { JwtStrategy } from "../strategies/jwt.strategy";
 import { LocalStrategy } from "../strategies/local.strategy";
+import { AuthService } from "./auth.service";
 import { MailService } from "./mail.service";
 
 @Module({

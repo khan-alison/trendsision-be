@@ -8,11 +8,11 @@ import {
     Query,
     UseGuards,
 } from "@nestjs/common";
+import { UserDecorator } from "src/decorators/current-user.decorator";
 import { Roles } from "src/decorators/roles.decorator";
 import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 import { RolesGuard } from "src/guards/roles.guard";
 import { ROLES } from "src/utils/constants";
-// import { LocalAuthGuard } from "src/auth/local-auth.guard";
 import { User } from "../entities/user.entity";
 import { UpdateUserDto } from "./dtos/update_user.dto";
 import { UsersService } from "./users.service";
@@ -34,6 +34,12 @@ export class UserController {
     }
 
     @UseGuards(JwtAuthGuard)
+    @Get("/my-info")
+    async getCurrentUserInfo(@UserDecorator() user: User) {
+        return this.usersService.getCurrentUser(user.email);
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Get("/:id")
     getUserById(@Param("id") id: string): Promise<User> {
         return this.usersService.getUserById(id);
@@ -46,13 +52,16 @@ export class UserController {
         @Param("id") id: string,
         @Body() newUserInfo: UpdateUserDto
     ): Promise<User> {
-        return this.updateUser(id, newUserInfo);
+        return this.usersService.updateUser(id, newUserInfo);
     }
 
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Delete("/:id")
     @Roles(ROLES.ADMIN)
-    removeUser(@Param("id") id: string): Promise<void> {
-        return this.usersService.removeUser(id);
+    removeUser(
+        @UserDecorator() user: User,
+        @Param("id") id: string
+    ): Promise<void> {
+        return this.usersService.removeUser(user.email, id);
     }
 }

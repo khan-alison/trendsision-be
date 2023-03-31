@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthController } from "./auth/auth.controller";
 import { AuthModule } from "./auth/auth.module";
@@ -22,7 +23,7 @@ import { UsersModule } from "./users/users.module";
         AuthModule,
     ],
     controllers: [AuthController],
-    providers: [],
+    providers: [JwtService],
 })
 export class AppModule {}
 // export class AppModule implements NestModule {

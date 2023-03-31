@@ -1,5 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "../entities/user.entity";
@@ -9,8 +12,7 @@ import { UpdateUserDto } from "./dtos/update_user.dto";
 export class UsersService {
     constructor(
         @InjectRepository(User)
-        private usersService: Repository<User>,
-        private jwtService: JwtService
+        private usersService: Repository<User>
     ) {
         this.usersService = usersService;
     }
@@ -35,6 +37,11 @@ export class UsersService {
         return users;
     }
 
+    async getCurrentUser(email: string): Promise<User> {
+        const user = this.getUserByEmail(email);
+        return user;
+    }
+
     async getUserById(id: string): Promise<User> {
         const user = await this.usersService.findOne({ where: { id } });
         if (!user) {
@@ -55,15 +62,32 @@ export class UsersService {
 
     async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
         const user = await this.usersService.findOne({ where: { id } });
+        if (!user) {
+            throw new NotFoundException(`User with id ${id} not found`);
+        }
         Object.assign(user, updateUserDto);
         await this.usersService.save(user);
         return user;
     }
 
-    async removeUser(id: string): Promise<void> {
-        const user = await this.usersService.delete(id);
+    async removeUser(email: string, id: string): Promise<void> {
+        const sendRequestUser = await this.usersService.findOne({
+            where: { email },
+        });
+        const wantDeleteUser = await this.usersService.findOne({
+            where: { id },
+        });
 
-        if (user.affected === 0) {
+        if (!wantDeleteUser) {
+            throw new NotFoundException(`User with id ${id} not found`);
+        }
+
+        if (wantDeleteUser?.id === sendRequestUser.id) {
+            throw new BadRequestException("You can't delete your account");
+        }
+
+        const deletedUser = await this.usersService.delete(id);
+        if (deletedUser.affected === 0) {
             throw new NotFoundException(`User with id ${id} not found`);
         }
     }
