@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Patch,
     Post,
     UseGuards,
     ValidationPipe,
@@ -12,6 +13,9 @@ import { AuthService } from "./auth.service";
 import { ForgotPasswordDto } from "./dtos/forgot-password.dto";
 import { LoginDto } from "./dtos/login.dto";
 import { ResetPasswordDto } from "./dtos/reset-password.dto";
+import { ChangePasswordDto } from "./dtos/change-password.dto";
+import { UserDecorator } from "src/decorators/current-user.decorator";
+import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 
 @Controller("auth")
 export class AuthController {
@@ -41,5 +45,14 @@ export class AuthController {
         @Body() resetPasswordDto: ResetPasswordDto
     ): Promise<void> {
         await this.authService.resetPassword(resetPasswordDto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch("/change-password")
+    async changePassword(
+        @UserDecorator() user: User,
+        @Body() changePasswordDto: ChangePasswordDto
+    ): Promise<void> {
+        await this.authService.changePassword(user.email, changePasswordDto);
     }
 }

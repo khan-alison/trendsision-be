@@ -1,3 +1,4 @@
+import { ChangePasswordDto } from "./dtos/change-password.dto";
 import {
     BadRequestException,
     ConflictException,
@@ -138,6 +139,28 @@ export class AuthService {
 
         await this.userRepository.save(user);
         await this.mailService.send(user, forgotLink);
+    }
+
+    async changePassword(
+        email: string,
+        changePasswordDto: ChangePasswordDto
+    ): Promise<void> {
+        const user = await this.userRepository.findOne({ where: { email } });
+        if (!user) {
+            throw new NotFoundException("User not found");
+        }
+        const isOldPasswordValid = await this.checkPassword(
+            changePasswordDto.oldPassword,
+            user.password
+        );
+
+        if (!isOldPasswordValid) {
+            throw new BadRequestException("Invalid old password");
+        }
+
+        user.password = await this.hashPassword(changePasswordDto.newPassword);
+
+        await this.userRepository.save(user);
     }
 
     async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
