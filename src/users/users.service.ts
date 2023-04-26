@@ -12,13 +12,13 @@ import { UpdateUserDto } from "./dtos/update_user.dto";
 export class UsersService {
     constructor(
         @InjectRepository(User)
-        private usersService: Repository<User>
+        private usersRepository: Repository<User>
     ) {
-        this.usersService = usersService;
+        this.usersRepository = usersRepository;
     }
 
     async getAllUser(filter?: any): Promise<User[]> {
-        const queryBuilder = this.usersService.createQueryBuilder("user");
+        const queryBuilder = this.usersRepository.createQueryBuilder("user");
         if (filter) {
             if (filter.name) {
                 queryBuilder.andWhere("user.name LIKE :name", {
@@ -33,7 +33,6 @@ export class UsersService {
             }
         }
         const users = await queryBuilder.getMany();
-
         return users;
     }
 
@@ -43,38 +42,36 @@ export class UsersService {
     }
 
     async getUserById(id: string): Promise<User> {
-        const user = await this.usersService.findOne({ where: { id } });
+        const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
             throw new NotFoundException(`User with id ${id} not found`);
-        } else {
-            return user;
         }
+        return user;
     }
 
     async getUserByEmail(email: string): Promise<User> {
-        const user = await this.usersService.findOne({ where: { email } });
+        const user = await this.usersRepository.findOne({ where: { email } });
         if (!user) {
             throw new NotFoundException(`User with id ${email} not found`);
-        } else {
-            return user;
         }
+        return user;
     }
 
     async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-        const user = await this.usersService.findOne({ where: { id } });
+        const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
             throw new NotFoundException(`User with id ${id} not found`);
         }
         Object.assign(user, updateUserDto);
-        await this.usersService.save(user);
+        await this.usersRepository.save(user);
         return user;
     }
 
     async removeUser(email: string, id: string): Promise<void> {
-        const sendRequestUser = await this.usersService.findOne({
+        const sendRequestUser = await this.usersRepository.findOne({
             where: { email },
         });
-        const wantDeleteUser = await this.usersService.findOne({
+        const wantDeleteUser = await this.usersRepository.findOne({
             where: { id },
         });
 
@@ -86,7 +83,7 @@ export class UsersService {
             throw new BadRequestException("You can't delete your account");
         }
 
-        const deletedUser = await this.usersService.delete(id);
+        const deletedUser = await this.usersRepository.delete(id);
         if (deletedUser.affected === 0) {
             throw new NotFoundException(`User with id ${id} not found`);
         }

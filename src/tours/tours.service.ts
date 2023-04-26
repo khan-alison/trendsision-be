@@ -1,30 +1,33 @@
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { TourImage } from "../entities/tour-image.entity";
+import { Tours } from "../entities/tour.entity";
+import { CreateTourDTO } from "./dtos/create-tour.dto";
+import { UpdateTourDto } from "./dtos/update-tour.dto";
 import {
     BadRequestException,
     Injectable,
     NotFoundException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { TourImage } from "../entities/tour-image.entity";
-import { Tour } from "../entities/tour.entity";
-import { CreateTourDTO } from "./dtos/create-tour.dto";
-import { UpdateTourDto } from "./dtos/update-tour.dto";
 
 @Injectable()
 export class ToursService {
     constructor(
-        @InjectRepository(Tour)
-        private tourRepository: Repository<Tour>
+        @InjectRepository(TourImage)
+        private tourImageRepository: Repository<TourImage>,
+        @InjectRepository(Tours)
+        private toursRepository: Repository<Tours>
     ) {
-        this.tourRepository = tourRepository;
+        this.toursRepository = toursRepository;
+        this.tourImageRepository = tourImageRepository;
     }
 
     async getAllTour(
         filter?: any,
         page?: number,
         limit?: number
-    ): Promise<Tour[]> {
-        const queryBuilder = this.tourRepository.createQueryBuilder("tour");
+    ): Promise<Tours[]> {
+        const queryBuilder = this.toursRepository.createQueryBuilder("tour");
 
         if (filter) {
             if (filter.minPrice && filter.maxPrice) {
@@ -92,49 +95,82 @@ export class ToursService {
         return tours;
     }
 
-    async getTourById(id: string): Promise<Tour> {
-        const tour = await this.tourRepository.findOneBy({ id });
+    async getTourById(id: string): Promise<Tours> {
+        const tour = await this.toursRepository.findOne({ where: { id } });
+
         if (!tour) {
             throw new NotFoundException(`Tour with id ${id} not found`);
-        } else {
-            return tour;
         }
+        return tour;
     }
 
-    async createTour(createTourDto: CreateTourDTO): Promise<Tour> {
-        const tour = Tour.create();
-        tour.images = createTourDto.images.map((image) =>
-            TourImage.create({ ...image })
-        );
+    async createTour(createTourDto: CreateTourDTO): Promise<Tours> {
+        const {
+            name,
+            duration,
+            maxGroupSize,
+            difficulty,
+            ratingsAverage,
+            ratingsQuantity,
+            price,
+            summary,
+            description,
+            coverImage,
+            images,
+            startDate,
+            endDate,
+        } = createTourDto;
 
-        const result = this.tourRepository.create({
-            ...createTourDto,
-            images: tour.images,
-        });
+        const tour = new Tours();
+        tour.name = name;
+        tour.duration = duration;
+        tour.maxGroupSize = maxGroupSize;
+        tour.difficulty = difficulty;
+        tour.ratingsAverage = ratingsAverage;
+        tour.ratingsQuantity = ratingsQuantity;
+        tour.price = price;
+        tour.summary = summary;
+        tour.description = description;
+        tour.coverImage = coverImage;
+        tour.startDate = startDate;
+        tour.endDate = endDate;
 
-        await this.tourRepository.save(result);
-        return result;
+        const savedTour = await this.toursRepository.save(tour);
+
+        if (images && images.length > 0) {
+            const tourImages = images.map((image) => {
+                const tourImage = new TourImage();
+                tourImage.image = image.image;
+                tourImage.tour = savedTour.id;
+                return tourImage;
+            });
+            await this.tourImageRepository.save(tourImages);
+            savedTour.images = tourImages;
+        }
+
+        return savedTour;
     }
 
     async deleteTour(id: string): Promise<void> {
-        const result = await this.tourRepository.delete(id);
+        const result = await this.toursRepository.delete(id);
 
         if (result.affected === 0) {
             throw new NotFoundException(`Tour with id ${id} not found`);
         }
     }
 
-    async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tour> {
+    async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tours> {
+        const tour = await this.getTourById(id);
+        if (!tour) {
+            throw new NotFoundException(`Tour with id ${id} not found`);
+        }
+
         try {
-            const tour = await this.getTourById(id);
-            if (!tour) {
-                throw new NotFoundException(`User with id ${id} not found`);
-            }
             Object.assign(tour, updateTourDto);
-            await this.tourRepository.save(tour);
+            await this.toursRepository.save(tour);
             return tour;
         } catch (error) {
-            throw new BadRequestException("Error");
+            throw new BadRequestException(`Error updating tour with id ${id}`);
         }
     }
 }

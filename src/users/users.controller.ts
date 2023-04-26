@@ -23,8 +23,9 @@ export class UserController {
         this.usersService = usersService;
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Get()
+    @Roles(ROLES.ADMIN, ROLES.LEAD_GUIDE)
     getAllUsers(@Query() query: any): Promise<User[]> {
         const filter = {
             name: query.name,

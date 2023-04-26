@@ -1,5 +1,6 @@
 import {
     IsArray,
+    IsDateString,
     IsNotEmpty,
     IsNumber,
     IsOptional,
@@ -48,8 +49,14 @@ export class CreateTourDTO {
 
     @IsString()
     @IsNotEmpty()
-    imageCover: string;
+    coverImage: string;
 
     @IsArray()
     images: TourImageDto[];
+
+    @IsDateString()
+    startDate: Date;
+
+    @IsDateString()
+    endDate: Date;
 }

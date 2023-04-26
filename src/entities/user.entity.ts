@@ -4,9 +4,12 @@ import {
     Column,
     Entity,
     ManyToOne,
+    OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { Tour } from "./tour.entity";
+import { Tours } from "./tour.entity";
+import { Comments } from "./tour-comments.entity";
+import { Reviews } from "./tour-reviews.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -31,6 +34,15 @@ export class User extends BaseEntity {
     @Column({ nullable: true })
     reset_token: string;
 
-    @ManyToOne(() => Tour, (tour) => tour.guides)
-    tour: Tour;
+    @ManyToOne(() => Tours, (tour) => tour.guiders)
+    staffTours: Tours;
+
+    @ManyToOne(() => Tours, (tour) => tour.customers)
+    clientTours: Tours;
+
+    @OneToMany(() => Comments, (comment) => comment.user)
+    comments: Comments[];
+
+    @OneToMany(() => Reviews, (review) => review.user)
+    reviews: Reviews[];
 }

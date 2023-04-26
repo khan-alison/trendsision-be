@@ -6,11 +6,13 @@ import {
     PrimaryGeneratedColumn,
 } from "typeorm";
 import { TourImage } from "./tour-image.entity";
+import { Reviews } from "./tour-reviews.entity";
 import { User } from "./user.entity";
+import { Comments } from "./tour-comments.entity";
 
 @Entity()
-export class Tour extends BaseEntity {
-    @PrimaryGeneratedColumn("uuid", { name: "tour_id" })
+export class Tours extends BaseEntity {
+    @PrimaryGeneratedColumn("uuid")
     id: string;
 
     @Column()
@@ -41,19 +43,35 @@ export class Tour extends BaseEntity {
     description: string;
 
     @Column()
-    imageCover: string;
+    coverImage: string;
 
-    @OneToMany(() => TourImage, (tourImage) => tourImage.tour_id, {
+    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    startDate: Date;
+
+    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    endDate: Date;
+
+    @OneToMany(() => User, (user) => user.staffTours, {
+        cascade: true,
+        eager: true,
+    })
+    guiders: User[];
+
+    @OneToMany(() => User, (user) => user.clientTours, {
+        cascade: true,
+        eager: true,
+    })
+    customers: User[];
+
+    @OneToMany(() => TourImage, (tourImage) => tourImage.tour, {
         cascade: ["insert", "update"],
-
         eager: true,
     })
     images: TourImage[];
 
-    @OneToMany(() => User, (tourGuide) => tourGuide.tour, {
-        cascade: true,
+    @OneToMany(() => Comments, (comment) => comment.tour)
+    comments: Comments[];
 
-        eager: true,
-    })
-    guides: string[];
+    @OneToMany(() => Reviews, (review) => review.tour)
+    reviews: Reviews[];
 }
