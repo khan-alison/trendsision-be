@@ -7,9 +7,9 @@ import {
     OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { Tours } from "./tour.entity";
-import { Comments } from "./tour-comments.entity";
-import { Reviews } from "./tour-reviews.entity";
+import { Tour } from "./tour.entity";
+import { TourComment } from "./tour-comments.entity";
+import { TourReview } from "./tour-reviews.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -34,15 +34,15 @@ export class User extends BaseEntity {
     @Column({ nullable: true })
     reset_token: string;
 
-    @ManyToOne(() => Tours, (tour) => tour.guiders)
-    staffTours: Tours;
+    @ManyToOne(() => Tour, (tour) => tour.guiders)
+    staffTours: Tour;
 
-    @ManyToOne(() => Tours, (tour) => tour.customers)
-    clientTours: Tours;
+    @ManyToOne(() => Tour, (tour) => tour.customers)
+    clientTours: Tour;
 
-    @OneToMany(() => Comments, (comment) => comment.user)
-    comments: Comments[];
+    @OneToMany(() => TourComment, (comment) => comment.user)
+    comments: TourComment[];
 
-    @OneToMany(() => Reviews, (review) => review.user)
-    reviews: Reviews[];
+    @OneToMany(() => TourReview, (review) => review.user)
+    reviews: TourReview[];
 }

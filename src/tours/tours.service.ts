@@ -1,22 +1,28 @@
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { TourImage } from "../entities/tour-image.entity";
-import { Tours } from "../entities/tour.entity";
-import { CreateTourDTO } from "./dtos/create-tour.dto";
-import { UpdateTourDto } from "./dtos/update-tour.dto";
 import {
     BadRequestException,
     Injectable,
     NotFoundException,
 } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { City } from "src/entities/city.entity";
+import { Country } from "src/entities/country.entity";
+import { Repository } from "typeorm";
+import { TourImage } from "../entities/tour-image.entity";
+import { Tour } from "../entities/tour.entity";
+import { CreateTourDTO } from "./dtos/create-tour/create-tour.dto";
+import { UpdateTourDto } from "./dtos/update-tour.dto";
 
 @Injectable()
 export class ToursService {
     constructor(
         @InjectRepository(TourImage)
         private tourImageRepository: Repository<TourImage>,
-        @InjectRepository(Tours)
-        private toursRepository: Repository<Tours>
+        @InjectRepository(Tour)
+        private toursRepository: Repository<Tour>,
+        @InjectRepository(City)
+        private tourCityRepository: Repository<City>,
+        @InjectRepository(Country)
+        private tourCountryRepository: Repository<Country>
     ) {
         this.toursRepository = toursRepository;
         this.tourImageRepository = tourImageRepository;
@@ -26,7 +32,7 @@ export class ToursService {
         filter?: any,
         page?: number,
         limit?: number
-    ): Promise<Tours[]> {
+    ): Promise<Tour[]> {
         const queryBuilder = this.toursRepository.createQueryBuilder("tour");
 
         if (filter) {
@@ -90,12 +96,17 @@ export class ToursService {
             queryBuilder.skip((page - 1) * limit).take(limit);
         }
 
-        const tours = await queryBuilder.getMany();
+        const tours = await queryBuilder
+            .leftJoinAndSelect("tour.images", "image")
+            .leftJoinAndSelect("tour.guiders", "guider")
+            .leftJoinAndSelect("tour.customers", "customer")
+            .leftJoinAndSelect("tour.city", "city")
+            .getMany();
 
         return tours;
     }
 
-    async getTourById(id: string): Promise<Tours> {
+    async getTourById(id: string): Promise<Tour> {
         const tour = await this.toursRepository.findOne({ where: { id } });
 
         if (!tour) {
@@ -104,7 +115,7 @@ export class ToursService {
         return tour;
     }
 
-    async createTour(createTourDto: CreateTourDTO): Promise<Tours> {
+    async createTour(createTourDto: CreateTourDTO): Promise<Tour> {
         const {
             name,
             duration,
@@ -117,38 +128,60 @@ export class ToursService {
             description,
             coverImage,
             images,
+            city,
             startDate,
             endDate,
         } = createTourDto;
 
-        const tour = new Tours();
-        tour.name = name;
-        tour.duration = duration;
-        tour.maxGroupSize = maxGroupSize;
-        tour.difficulty = difficulty;
-        tour.ratingsAverage = ratingsAverage;
-        tour.ratingsQuantity = ratingsQuantity;
-        tour.price = price;
-        tour.summary = summary;
-        tour.description = description;
-        tour.coverImage = coverImage;
-        tour.startDate = startDate;
-        tour.endDate = endDate;
-
-        const savedTour = await this.toursRepository.save(tour);
-
-        if (images && images.length > 0) {
-            const tourImages = images.map((image) => {
-                const tourImage = new TourImage();
-                tourImage.image = image.image;
-                tourImage.tour = savedTour.id;
-                return tourImage;
+        try {
+            const tourCity = await this.tourCityRepository.findOne({
+                where: { name: city.name },
             });
-            await this.tourImageRepository.save(tourImages);
-            savedTour.images = tourImages;
-        }
 
-        return savedTour;
+            const country = await this.tourCountryRepository.findOne({
+                where: { name: city.country.name },
+            });
+
+            const tour = new Tour();
+            tour.name = name;
+            tour.duration = duration;
+            tour.maxGroupSize = maxGroupSize;
+            tour.difficulty = difficulty;
+            tour.ratingsAverage = ratingsAverage;
+            tour.ratingsQuantity = ratingsQuantity;
+            tour.price = price;
+            tour.summary = summary;
+            tour.description = description;
+            tour.coverImage = coverImage;
+            tour.startDate = startDate;
+            tour.endDate = endDate;
+            tour.city = tourCity
+                ? tourCity
+                : this.tourCityRepository.create({
+                      name: city.name,
+                      country: country
+                          ? country
+                          : this.tourCountryRepository.create({
+                                name: city.country.name,
+                            }),
+                  });
+
+            const savedTour = await this.toursRepository.save(tour);
+
+            if (images && images.length > 0) {
+                const tourImages = images.map((image) => {
+                    const tourImage = new TourImage();
+                    tourImage.image = image.image;
+                    tourImage.tour = savedTour.id;
+                    return tourImage;
+                });
+                await this.tourImageRepository.save(tourImages);
+                savedTour.images = tourImages;
+            }
+            return savedTour;
+        } catch (error) {
+            throw error;
+        }
     }
 
     async deleteTour(id: string): Promise<void> {
@@ -159,7 +192,7 @@ export class ToursService {
         }
     }
 
-    async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tours> {
+    async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tour> {
         const tour = await this.getTourById(id);
         if (!tour) {
             throw new NotFoundException(`Tour with id ${id} not found`);

@@ -8,6 +8,7 @@ import {
     Max,
     Min,
 } from "class-validator";
+import { TourCityDto } from "./city-tour.dto";
 import { TourImageDto } from "./tour-image.dto";
 
 export class CreateTourDTO {
@@ -53,6 +54,9 @@ export class CreateTourDTO {
 
     @IsArray()
     images: TourImageDto[];
+
+    @IsNotEmpty()
+    city: TourCityDto;
 
     @IsDateString()
     startDate: Date;

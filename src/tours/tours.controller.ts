@@ -15,8 +15,8 @@ import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 import { RolesGuard } from "src/guards/roles.guard";
 import { ROLES } from "src/utils/constants";
 import { HttpExceptionFilter } from "src/utils/http_exception.filter";
-import { Tours } from "../entities/tour.entity";
-import { CreateTourDTO } from "./dtos/create-tour.dto";
+import { Tour } from "../entities/tour.entity";
+import { CreateTourDTO } from "./dtos/create-tour/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
 import { ToursService } from "./tours.service";
 
@@ -28,7 +28,7 @@ export class ToursController {
     }
 
     @Get()
-    async getAllTour(@Query() query: any): Promise<Tours[]> {
+    async getAllTour(@Query() query: any): Promise<Tour[]> {
         const { page, limit } = query;
 
         const filter = {
@@ -50,14 +50,14 @@ export class ToursController {
 
     @UseGuards(JwtAuthGuard)
     @Get("/:id")
-    getTourById(@Param("id") id: string): Promise<Tours> {
+    getTourById(@Param("id") id: string): Promise<Tour> {
         return this.toursService.getTourById(id);
     }
 
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Post()
     @Roles(ROLES.ADMIN)
-    createTour(@Body() createTourDto: CreateTourDTO): Promise<Tours> {
+    createTour(@Body() createTourDto: CreateTourDTO): Promise<Tour> {
         return this.toursService.createTour(createTourDto);
     }
 
@@ -74,7 +74,7 @@ export class ToursController {
     async updateTour(
         @Param("id") id: string,
         @Body() updateTourDto: UpdateTourDto
-    ): Promise<Tours> {
+    ): Promise<Tour> {
         return this.toursService.updateTour(id, updateTourDto);
     }
 }

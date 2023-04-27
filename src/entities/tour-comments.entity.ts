@@ -5,11 +5,11 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { Tours } from "./tour.entity";
+import { Tour } from "./tour.entity";
 import { User } from "./user.entity";
 
 @Entity()
-export class Comments extends BaseEntity {
+export class TourComment extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: number;
 
@@ -22,8 +22,8 @@ export class Comments extends BaseEntity {
     @Column({ default: () => "CURRENT_TIMESTAMP" })
     timeStamp: Date;
 
-    @ManyToOne(() => Tours, (tour) => tour.comments, { onDelete: "CASCADE" })
-    tour: Tours;
+    @ManyToOne(() => Tour, (tour) => tour.comments, { onDelete: "CASCADE" })
+    tour: Tour;
 
     @ManyToOne(() => User, (user) => user.comments, { onDelete: "CASCADE" })
     user: User;

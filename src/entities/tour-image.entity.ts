@@ -5,7 +5,7 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { Tours } from "./tour.entity";
+import { Tour } from "./tour.entity";
 
 @Entity("tour_images")
 export class TourImage extends BaseEntity {
@@ -15,7 +15,7 @@ export class TourImage extends BaseEntity {
     @Column({ default: "default.png" })
     image: string;
 
-    @ManyToOne(() => Tours, (tour) => tour.id, {
+    @ManyToOne(() => Tour, (tour) => tour.images, {
         onDelete: "CASCADE",
     })
     tour: string;

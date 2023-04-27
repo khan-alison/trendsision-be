@@ -2,16 +2,18 @@ import {
     BaseEntity,
     Column,
     Entity,
+    ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
+import { City } from "./city.entity";
 import { TourImage } from "./tour-image.entity";
-import { Reviews } from "./tour-reviews.entity";
 import { User } from "./user.entity";
-import { Comments } from "./tour-comments.entity";
+import { TourReview } from "./tour-reviews.entity";
+import { TourComment } from "./tour-comments.entity";
 
 @Entity()
-export class Tours extends BaseEntity {
+export class Tour extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
@@ -39,17 +41,23 @@ export class Tours extends BaseEntity {
     @Column()
     summary: string;
 
-    @Column({ type: "longtext" })
+    @Column({ type: "text" })
     description: string;
 
     @Column()
     coverImage: string;
 
-    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
     startDate: Date;
 
-    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
     endDate: Date;
+
+    @ManyToOne(() => City, (city) => city.tours, {
+        eager: true,
+        cascade: true,
+    })
+    city: City;
 
     @OneToMany(() => User, (user) => user.staffTours, {
         cascade: true,
@@ -69,9 +77,9 @@ export class Tours extends BaseEntity {
     })
     images: TourImage[];
 
-    @OneToMany(() => Comments, (comment) => comment.tour)
-    comments: Comments[];
+    @OneToMany(() => TourComment, (comment) => comment.tour, { eager: true })
+    comments: TourComment[];
 
-    @OneToMany(() => Reviews, (review) => review.tour)
-    reviews: Reviews[];
+    @OneToMany(() => TourReview, (review) => review.tour, { eager: true })
+    reviews: TourReview[];
 }
