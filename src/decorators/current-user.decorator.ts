@@ -1,9 +1,27 @@
-import { createParamDecorator, ExecutionContext } from "@nestjs/common";
+import {
+    createParamDecorator,
+    ExecutionContext,
+    HttpException,
+    HttpStatus,
+} from "@nestjs/common";
+import { verifyAccessJWT } from "src/utils/jwt";
 
 export const UserDecorator = createParamDecorator(
-    (data: unknown, ctx: ExecutionContext) => {
+    async (data: unknown, ctx: ExecutionContext) => {
         const request = ctx.switchToHttp().getRequest();
+        const bearerHeader = request.headers.authorization;
+        if (!bearerHeader) {
+            throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
 
-        return request.user;
+        const bearer = bearerHeader.split(" ");
+        const token = bearer[1];
+
+        const payload = await verifyAccessJWT(token);
+
+        if (payload) {
+            return payload;
+        }
+        return false;
     }
 );

@@ -1,6 +1,8 @@
 import {
     Body,
     Controller,
+    HttpCode,
+    HttpStatus,
     Patch,
     Post,
     UseGuards,
@@ -16,11 +18,13 @@ import { ResetPasswordDto } from "./dtos/reset-password.dto";
 import { ChangePasswordDto } from "./dtos/change-password.dto";
 import { UserDecorator } from "src/decorators/current-user.decorator";
 import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
+import { RefreshTokenDto } from "./dtos/refresh-token.dto";
 
 @Controller("auth")
 export class AuthController {
     constructor(private authService: AuthService) {}
     @Post("/signup")
+    @HttpCode(HttpStatus.OK)
     async signUp(
         @Body(ValidationPipe) createUserDto: CreateUserDto
     ): Promise<User> {
@@ -29,15 +33,22 @@ export class AuthController {
 
     @UseGuards(LocalAuthGuard)
     @Post("/signin")
+    @HttpCode(HttpStatus.OK)
     async signIn(@Body() loginDto: LoginDto) {
-        return this.authService.signIn(loginDto);
+        return await this.authService.signIn(loginDto);
+    }
+
+    @Post("refresh-token")
+    @HttpCode(HttpStatus.CREATED)
+    async generateNewAccessJWT(@Body() refreshTokenDto: RefreshTokenDto) {
+        return await this.authService.generateNewAccessJWT(refreshTokenDto);
     }
 
     @Post("/forgot-password")
     async forgotPassword(
         @Body(new ValidationPipe()) forgotPasswordDto: ForgotPasswordDto
     ): Promise<void> {
-        return this.authService.forgotPassword(forgotPasswordDto);
+        await this.authService.forgotPassword(forgotPasswordDto);
     }
 
     @Post("/reset-password")

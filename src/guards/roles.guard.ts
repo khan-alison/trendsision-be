@@ -1,11 +1,18 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import {
+    CanActivate,
+    ExecutionContext,
+    HttpException,
+    HttpStatus,
+    Injectable,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { verifyAccessJWT } from "src/utils/jwt";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
     constructor(private reflector: Reflector) {}
 
-    canActivate(context: ExecutionContext): boolean {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
         const roles = this.reflector.get<string[]>(
             "role",
             context.getHandler()
@@ -15,8 +22,15 @@ export class RolesGuard implements CanActivate {
         }
 
         const request = context.switchToHttp().getRequest();
-        const { user } = request;
+        const bearerHeader = request.headers.authorization;
+        if (!bearerHeader) {
+            throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+        const bearer = bearerHeader.split(" ");
+        const token = bearer[1];
 
-        return roles.includes(user.role);
+        const payload: any = await verifyAccessJWT(token);
+
+        return roles.includes(payload.role);
     }
 }

@@ -1,8 +1,4 @@
-import {
-    BadRequestException,
-    Injectable,
-    NotFoundException,
-} from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "../entities/user.entity";
@@ -44,7 +40,10 @@ export class UsersService {
     async getUserById(id: string): Promise<User> {
         const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
-            throw new NotFoundException(`User with id ${id} not found`);
+            throw new HttpException(
+                `User with id ${id} not found`,
+                HttpStatus.NOT_FOUND
+            );
         }
         return user;
     }
@@ -52,7 +51,10 @@ export class UsersService {
     async getUserByEmail(email: string): Promise<User> {
         const user = await this.usersRepository.findOne({ where: { email } });
         if (!user) {
-            throw new NotFoundException(`User with id ${email} not found`);
+            throw new HttpException(
+                `User with id ${email} not found`,
+                HttpStatus.NOT_FOUND
+            );
         }
         return user;
     }
@@ -60,7 +62,10 @@ export class UsersService {
     async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
         const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
-            throw new NotFoundException(`User with id ${id} not found`);
+            throw new HttpException(
+                `User with id ${id} not found`,
+                HttpStatus.NOT_FOUND
+            );
         }
         Object.assign(user, updateUserDto);
         await this.usersRepository.save(user);
@@ -76,16 +81,25 @@ export class UsersService {
         });
 
         if (!wantDeleteUser) {
-            throw new NotFoundException(`User with id ${id} not found`);
+            throw new HttpException(
+                `User with id ${id} not found`,
+                HttpStatus.NOT_FOUND
+            );
         }
 
         if (wantDeleteUser?.id === sendRequestUser.id) {
-            throw new BadRequestException("You can't delete your account");
+            throw new HttpException(
+                "You can't delete your account",
+                HttpStatus.BAD_REQUEST
+            );
         }
 
         const deletedUser = await this.usersRepository.delete(id);
         if (deletedUser.affected === 0) {
-            throw new NotFoundException(`User with id ${id} not found`);
+            throw new HttpException(
+                `User with id ${id} not found`,
+                HttpStatus.BAD_REQUEST
+            );
         }
     }
 }

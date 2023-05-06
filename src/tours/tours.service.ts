@@ -1,8 +1,4 @@
-import {
-    BadRequestException,
-    Injectable,
-    NotFoundException,
-} from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { City } from "src/entities/city.entity";
 import { Country } from "src/entities/country.entity";
@@ -110,7 +106,10 @@ export class ToursService {
         const tour = await this.toursRepository.findOne({ where: { id } });
 
         if (!tour) {
-            throw new NotFoundException(`Tour with id ${id} not found`);
+            throw new HttpException(
+                `Tour with id ${id} not found`,
+                HttpStatus.NOT_FOUND
+            );
         }
         return tour;
     }
@@ -188,14 +187,20 @@ export class ToursService {
         const result = await this.toursRepository.delete(id);
 
         if (result.affected === 0) {
-            throw new NotFoundException(`Tour with id ${id} not found`);
+            throw new HttpException(
+                `Tour with id ${id} not found`,
+                HttpStatus.NOT_FOUND
+            );
         }
     }
 
     async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tour> {
         const tour = await this.getTourById(id);
         if (!tour) {
-            throw new NotFoundException(`Tour with id ${id} not found`);
+            throw new HttpException(
+                `Tour with id ${id} not found`,
+                HttpStatus.NOT_FOUND
+            );
         }
 
         try {
@@ -203,7 +208,10 @@ export class ToursService {
             await this.toursRepository.save(tour);
             return tour;
         } catch (error) {
-            throw new BadRequestException(`Error updating tour with id ${id}`);
+            throw new HttpException(
+                `Error updating tour with id ${id}`,
+                HttpStatus.BAD_REQUEST
+            );
         }
     }
 }
