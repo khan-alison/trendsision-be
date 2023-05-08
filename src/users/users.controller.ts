@@ -8,6 +8,18 @@ import {
     Query,
     UseGuards,
 } from "@nestjs/common";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiForbiddenResponse,
+    ApiOkResponse,
+    ApiParam,
+    ApiQuery,
+    ApiResponse,
+    ApiTags,
+    ApiUnauthorizedResponse,
+    ApiNoContentResponse,
+} from "@nestjs/swagger";
 import { UserDecorator } from "src/decorators/current-user.decorator";
 import { Roles } from "src/decorators/roles.decorator";
 import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
@@ -18,14 +30,34 @@ import { UpdateUserDto } from "./dtos/update_user.dto";
 import { UsersService } from "./users.service";
 
 @Controller("users")
+@ApiTags("users")
+@ApiBearerAuth()
 export class UserController {
     constructor(private usersService: UsersService) {
         this.usersService = usersService;
     }
 
-    @UseGuards(JwtAuthGuard, RolesGuard)
     @Get()
     @Roles(ROLES.ADMIN, ROLES.LEAD_GUIDE)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @ApiQuery({
+        name: "name",
+        type: "string",
+        required: false,
+        description: "The name that you want to search",
+    })
+    @ApiQuery({
+        name: "email",
+        type: "string",
+        required: false,
+        description: "The email that you want to search",
+    })
+    @ApiResponse({
+        status: 200,
+        description: "The retrieved tours.",
+    })
+    @ApiUnauthorizedResponse({ description: "Unauthorized" })
+    @ApiForbiddenResponse({ description: "Forbidden" })
     getAllUsers(@Query() query: any): Promise<User[]> {
         const filter = {
             name: query.name,
@@ -34,21 +66,61 @@ export class UserController {
         return this.usersService.getAllUser(filter);
     }
 
-    @UseGuards(JwtAuthGuard)
     @Get("/my-info")
+    @UseGuards(JwtAuthGuard)
+    @ApiOkResponse({
+        description: "Returns the current user's information.",
+    })
+    @ApiUnauthorizedResponse({ description: "Unauthorized." })
     async getCurrentUserInfo(@UserDecorator() user: User) {
         return this.usersService.getCurrentUser(user.email);
     }
 
-    @UseGuards(JwtAuthGuard)
     @Get("/:id")
+    @UseGuards(JwtAuthGuard)
+    @ApiParam({
+        name: "id",
+        description: "The ID of the user.",
+        type: "string",
+    })
+    @ApiOkResponse({
+        description: "Returns the user with the specified ID.",
+    })
+    @ApiUnauthorizedResponse({ description: "Unauthorized." })
     getUserById(@Param("id") id: string): Promise<User> {
         return this.usersService.getUserById(id);
     }
 
-    @UseGuards(JwtAuthGuard, RolesGuard)
     @Patch("/:id")
     @Roles(ROLES.ADMIN, ROLES.LEAD_GUIDE)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @ApiParam({
+        name: "id",
+        description: "The ID of the user to update.",
+        type: "string",
+    })
+    @ApiBody({
+        type: UpdateUserDto,
+        examples: {
+            example1: {
+                value: {
+                    name: "khanh",
+                },
+                description:
+                    "Example of a valid object. You can update multiple field",
+            },
+            example2: {
+                value: {
+                    photo: "khanh.png",
+                },
+                description:
+                    "Example of a valid object. You can update multiple field",
+            },
+        },
+    })
+    @ApiOkResponse({ description: "Returns the updated user." })
+    @ApiUnauthorizedResponse({ description: "Unauthorized." })
+    @ApiForbiddenResponse({ description: "Forbidden." })
     updateUser(
         @Param("id") id: string,
         @Body() newUserInfo: UpdateUserDto
@@ -56,9 +128,17 @@ export class UserController {
         return this.usersService.updateUser(id, newUserInfo);
     }
 
-    @UseGuards(JwtAuthGuard, RolesGuard)
     @Delete("/:id")
     @Roles(ROLES.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @ApiParam({
+        name: "id",
+        description: "The ID of the user to remove.",
+        type: "string",
+    })
+    @ApiNoContentResponse({ description: "The user has been removed." })
+    @ApiUnauthorizedResponse({ description: "Unauthorized." })
+    @ApiForbiddenResponse({ description: "Forbidden." })
     removeUser(
         @UserDecorator() user: User,
         @Param("id") id: string
