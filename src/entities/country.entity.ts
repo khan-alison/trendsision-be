@@ -1,14 +1,14 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { City } from "./city.entity";
+import { CityEntity } from "./city.entity";
 
 @Entity()
-export class Country {
+export class CountryEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
     @Column()
     name: string;
 
-    @OneToMany(() => City, (city) => city.country)
-    cities: City[];
+    @OneToMany(() => CityEntity, (city) => city.country)
+    cities: CityEntity[];
 }

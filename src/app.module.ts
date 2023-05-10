@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { APP_FILTER } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthController } from "./auth/auth.controller";
@@ -8,12 +9,11 @@ import { ReviewsModule } from "./reviews/reviews.module";
 import { ReviewsService } from "./reviews/reviews.service";
 import { ToursModule } from "./tours/tours.module";
 import { UsersModule } from "./users/users.module";
-import { APP_FILTER } from "@nestjs/core";
 import { CustomNotFoundExceptionFilter } from "./utils/custom-not-found-exception.filter";
+import { JwtExpiredExceptionFilter } from "./utils/jwtExpired.exception";
 
 @Module({
     imports: [
-        ToursModule,
         TypeOrmModule.forRoot({
             type: "mysql",
             host: "localhost",
@@ -24,6 +24,7 @@ import { CustomNotFoundExceptionFilter } from "./utils/custom-not-found-exceptio
             entities: ["dist/**/*.entity.{ts,js}"],
             synchronize: true,
         }),
+        ToursModule,
         UsersModule,
         AuthModule,
         ReviewsModule,
@@ -36,11 +37,10 @@ import { CustomNotFoundExceptionFilter } from "./utils/custom-not-found-exceptio
             provide: APP_FILTER,
             useClass: CustomNotFoundExceptionFilter,
         },
+        {
+            provide: APP_FILTER,
+            useClass: JwtExpiredExceptionFilter,
+        },
     ],
 })
 export class AppModule {}
-// export class AppModule implements NestModule {
-//     configure(consumer: MiddlewareConsumer) {
-//         consumer.apply(LoggerMiddleware).forRoutes("*");
-//     }
-// }
