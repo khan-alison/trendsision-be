@@ -6,14 +6,14 @@ import {
     OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { City } from "./city.entity";
-import { TourImage } from "./tour-image.entity";
-import { User } from "./user.entity";
-import { TourReview } from "./tour-reviews.entity";
-import { TourComment } from "./tour-comments.entity";
+import { CityEntity } from "./city.entity";
+import { TourImageEntity } from "./tour-image.entity";
+import { UserEntity } from "./user.entity";
+import { TourReviewEntity } from "./tour-reviews.entity";
+import { TourCommentEntity } from "./tour-comments.entity";
 
 @Entity()
-export class Tour extends BaseEntity {
+export class TourEntity extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
@@ -53,33 +53,35 @@ export class Tour extends BaseEntity {
     @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
     endDate: Date;
 
-    @ManyToOne(() => City, (city) => city.tours, {
+    @ManyToOne(() => CityEntity, (city) => city.tours, {
         eager: true,
         cascade: true,
     })
-    city: City;
+    city: CityEntity;
 
-    @OneToMany(() => User, (user) => user.staffTours, {
+    @OneToMany(() => UserEntity, (user) => user.staffTours, {
         cascade: true,
         eager: true,
     })
-    guiders: User[];
+    guiders: UserEntity[];
 
-    @OneToMany(() => User, (user) => user.clientTours, {
+    @OneToMany(() => UserEntity, (user) => user.clientTours, {
         cascade: true,
         eager: true,
     })
-    customers: User[];
+    customers: UserEntity[];
 
-    @OneToMany(() => TourImage, (tourImage) => tourImage.tour, {
+    @OneToMany(() => TourImageEntity, (tourImage) => tourImage.tour, {
         cascade: ["insert", "update"],
         eager: true,
     })
-    images: TourImage[];
+    images: TourImageEntity[];
 
-    @OneToMany(() => TourComment, (comment) => comment.tour, { eager: true })
-    comments: TourComment[];
+    @OneToMany(() => TourCommentEntity, (comment) => comment.tour, {
+        eager: true,
+    })
+    comments: TourCommentEntity[];
 
-    @OneToMany(() => TourReview, (review) => review.tour, { eager: true })
-    reviews: TourReview[];
+    @OneToMany(() => TourReviewEntity, (review) => review.tour, { eager: true })
+    reviews: TourReviewEntity[];
 }
