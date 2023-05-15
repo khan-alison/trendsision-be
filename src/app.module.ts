@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthController } from "./auth/auth.controller";
 import { AuthModule } from "./auth/auth.module";
@@ -28,6 +29,10 @@ import { JwtExpiredExceptionFilter } from "./utils/jwtExpired.exception";
         UsersModule,
         AuthModule,
         ReviewsModule,
+        ThrottlerModule.forRoot({
+            ttl: 60,
+            limit: 10,
+        }),
     ],
     controllers: [AuthController, ReviewsController],
     providers: [

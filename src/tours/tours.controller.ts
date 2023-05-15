@@ -31,10 +31,12 @@ import { TourEntity } from "../entities/tour.entity";
 import { CreateTourDTO } from "./dtos/create-tour/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
 import { ToursService } from "./tours.service";
+import { SkipThrottle } from "@nestjs/throttler";
 
 @Controller("tours")
 @ApiTags("tours")
 @ApiBearerAuth()
+@SkipThrottle()
 @UseFilters(new HttpExceptionFilter())
 export class ToursController {
     constructor(private readonly toursService: ToursService) {}

@@ -12,13 +12,13 @@ import {
     ApiBearerAuth,
     ApiBody,
     ApiForbiddenResponse,
+    ApiNoContentResponse,
     ApiOkResponse,
     ApiParam,
     ApiQuery,
     ApiResponse,
     ApiTags,
     ApiUnauthorizedResponse,
-    ApiNoContentResponse,
 } from "@nestjs/swagger";
 import { UserDecorator } from "src/decorators/current-user.decorator";
 import { Roles } from "src/decorators/roles.decorator";
@@ -28,10 +28,12 @@ import { ROLES } from "src/utils/constants";
 import { UserEntity } from "../entities/user.entity";
 import { UpdateUserDto } from "./dtos/update_user.dto";
 import { UsersService } from "./users.service";
+import { SkipThrottle } from "@nestjs/throttler";
 
 @Controller("users")
 @ApiTags("users")
 @ApiBearerAuth()
+@SkipThrottle()
 export class UserController {
     constructor(private usersService: UsersService) {
         this.usersService = usersService;
