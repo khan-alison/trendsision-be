@@ -6,13 +6,15 @@ import {
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
+    UpdateDateColumn,
 } from "typeorm";
-import { Tour } from "./tour.entity";
-import { TourComment } from "./tour-comments.entity";
-import { TourReview } from "./tour-reviews.entity";
+import { TourCommentEntity } from "./tour-comments.entity";
+import { TourReviewEntity } from "./tour-reviews.entity";
+import { TourEntity } from "./tour.entity";
+import { DeviceSessionEntity } from "./device-session.entity";
 
 @Entity()
-export class User extends BaseEntity {
+export class UserEntity extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
@@ -34,15 +36,24 @@ export class User extends BaseEntity {
     @Column({ nullable: true })
     reset_token: string;
 
-    @ManyToOne(() => Tour, (tour) => tour.guiders)
-    staffTours: Tour;
+    @ManyToOne(() => TourEntity, (tour) => tour.guiders)
+    staffTours: TourEntity;
 
-    @ManyToOne(() => Tour, (tour) => tour.customers)
-    clientTours: Tour;
+    @ManyToOne(() => TourEntity, (tour) => tour.customers)
+    clientTours: TourEntity;
 
-    @OneToMany(() => TourComment, (comment) => comment.user)
-    comments: TourComment[];
+    @OneToMany(() => TourCommentEntity, (comment) => comment.user)
+    comments: TourCommentEntity[];
 
-    @OneToMany(() => TourReview, (review) => review.user)
-    reviews: TourReview[];
+    @OneToMany(() => TourReviewEntity, (review) => review.user)
+    reviews: TourReviewEntity[];
+
+    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
+
+    @OneToMany(() => DeviceSessionEntity, (deviceSession) => deviceSession.user)
+    deviceSessions: DeviceSessionEntity[];
 }

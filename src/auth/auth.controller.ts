@@ -1,28 +1,35 @@
 import {
     Body,
     Controller,
+    Get,
+    Headers,
     HttpCode,
     HttpStatus,
     Patch,
     Post,
+    Req,
     UseGuards,
     ValidationPipe,
 } from "@nestjs/common";
-import { User } from "src/entities/user.entity";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { UserDecorator } from "src/decorators/current-user.decorator";
+import { DeviceSessionEntity } from "src/entities/device-session.entity";
+import { UserEntity } from "src/entities/user.entity";
+import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 import { CreateUserDto } from "src/users/dtos/create_user_dto";
+import { LoginMetadata } from "src/utils/constants";
 import { LocalAuthGuard } from "../guards/local-auth.guard";
 import { AuthService } from "./auth.service";
+import { ChangePasswordDto } from "./dtos/change-password.dto";
 import { ForgotPasswordDto } from "./dtos/forgot-password.dto";
 import { LoginDto } from "./dtos/login.dto";
-import { ResetPasswordDto } from "./dtos/reset-password.dto";
-import { ChangePasswordDto } from "./dtos/change-password.dto";
-import { UserDecorator } from "src/decorators/current-user.decorator";
-import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 import { RefreshTokenDto } from "./dtos/refresh-token.dto";
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ResetPasswordDto } from "./dtos/reset-password.dto";
+import { SkipThrottle } from "@nestjs/throttler";
 
 @Controller("auth")
 @ApiTags("auth")
+@SkipThrottle()
 export class AuthController {
     constructor(private authService: AuthService) {}
     @Post("/signup")
@@ -47,7 +54,7 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     async signUp(
         @Body(ValidationPipe) createUserDto: CreateUserDto
-    ): Promise<User> {
+    ): Promise<UserEntity> {
         return this.authService.signUp(createUserDto);
     }
 
@@ -66,8 +73,16 @@ export class AuthController {
         },
     })
     @HttpCode(HttpStatus.OK)
-    async signIn(@Body() loginDto: LoginDto) {
-        return await this.authService.signIn(loginDto);
+    async signIn(
+        @Req() req,
+        @Body() loginDto: LoginDto,
+        @Headers() headers: Headers
+    ) {
+        const ipAddress = req.connection.remoteAddress;
+        const ua = headers["user-agent"];
+        const { deviceId } = req;
+        const metaData: LoginMetadata = { ipAddress, ua, deviceId };
+        return await this.authService.signIn(loginDto, metaData);
     }
 
     @Post("refresh-token")
@@ -84,8 +99,15 @@ export class AuthController {
         },
     })
     @HttpCode(HttpStatus.CREATED)
-    async generateNewAccessJWT(@Body() refreshTokenDto: RefreshTokenDto) {
-        return await this.authService.generateNewAccessJWT(refreshTokenDto);
+    async generateNewAccessJWT(
+        @Body() refreshTokenDto: RefreshTokenDto,
+        @Req() req
+    ) {
+        const { deviceId } = req;
+        return await this.authService.generateNewAccessJWT(
+            deviceId,
+            refreshTokenDto
+        );
     }
 
     @Post("/forgot-password")
@@ -152,9 +174,25 @@ export class AuthController {
         },
     })
     async changePassword(
-        @UserDecorator() user: User,
+        @UserDecorator() user: UserEntity,
         @Body() changePasswordDto: ChangePasswordDto
     ): Promise<void> {
         await this.authService.changePassword(user.email, changePasswordDto);
+    }
+
+    @Get("device-session")
+    @ApiOperation({ summary: "Get user device sessions" })
+    @UseGuards(JwtAuthGuard)
+    async getDeviceSessions(
+        @UserDecorator() user: UserEntity
+    ): Promise<DeviceSessionEntity[]> {
+        return this.authService.getDeviceSessions(user.id);
+    }
+
+    @Post("logout")
+    @ApiOperation({ summary: "Logout user from device" })
+    async logout(@UserDecorator() user: UserEntity, @Req() req) {
+        const { deviceId } = req;
+        return this.authService.logout(user.id, deviceId);
     }
 }

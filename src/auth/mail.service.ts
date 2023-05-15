@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import * as nodemailer from "nodemailer";
-import { User } from "src/entities/user.entity";
+import { UserEntity } from "src/entities/user.entity";
 
 @Injectable()
 export class MailService {
@@ -18,7 +18,7 @@ export class MailService {
         });
     }
 
-    async send(user: User, forgotLink: string): Promise<void> {
+    async send(user: UserEntity, forgotLink: string): Promise<void> {
         try {
             await this.transporter.sendMail({
                 from: "Khanh",

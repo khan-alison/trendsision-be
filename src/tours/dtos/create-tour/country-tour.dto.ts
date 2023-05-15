@@ -1,5 +1,5 @@
 import { IsArray, IsString } from "class-validator";
-import { City } from "src/entities/city.entity";
+import { CityEntity } from "src/entities/city.entity";
 
 export class TourCountryDto {
     @IsString()
@@ -9,5 +9,5 @@ export class TourCountryDto {
     name: string;
 
     @IsArray()
-    cities: City[];
+    cities: CityEntity[];
 }

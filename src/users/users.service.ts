@@ -1,19 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { User } from "../entities/user.entity";
+import { UserEntity } from "../entities/user.entity";
 import { UpdateUserDto } from "./dtos/update_user.dto";
 
 @Injectable()
 export class UsersService {
     constructor(
-        @InjectRepository(User)
-        private usersRepository: Repository<User>
+        @InjectRepository(UserEntity)
+        private usersRepository: Repository<UserEntity>
     ) {
         this.usersRepository = usersRepository;
     }
 
-    async getAllUser(filter?: any): Promise<User[]> {
+    async getAllUser(filter?: any): Promise<UserEntity[]> {
         const queryBuilder = this.usersRepository.createQueryBuilder("user");
         if (filter) {
             if (filter.name) {
@@ -32,12 +32,12 @@ export class UsersService {
         return users;
     }
 
-    async getCurrentUser(email: string): Promise<User> {
+    async getCurrentUser(email: string): Promise<UserEntity> {
         const user = this.getUserByEmail(email);
         return user;
     }
 
-    async getUserById(id: string): Promise<User> {
+    async getUserById(id: string): Promise<UserEntity> {
         const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
             throw new HttpException(
@@ -48,7 +48,7 @@ export class UsersService {
         return user;
     }
 
-    async getUserByEmail(email: string): Promise<User> {
+    async getUserByEmail(email: string): Promise<UserEntity> {
         const user = await this.usersRepository.findOne({ where: { email } });
         if (!user) {
             throw new HttpException(
@@ -59,7 +59,10 @@ export class UsersService {
         return user;
     }
 
-    async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    async updateUser(
+        id: string,
+        updateUserDto: UpdateUserDto
+    ): Promise<UserEntity> {
         const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
             throw new HttpException(
