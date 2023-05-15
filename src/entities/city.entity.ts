@@ -5,23 +5,23 @@ import {
     OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { Country } from "./country.entity";
-import { Tour } from "./tour.entity";
+import { CountryEntity } from "./country.entity";
+import { TourEntity } from "./tour.entity";
 
 @Entity()
-export class City {
+export class CityEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
     @Column()
     name: string;
 
-    @OneToMany(() => Tour, (tour) => tour.city)
-    tours: Tour[];
+    @OneToMany(() => TourEntity, (tour) => tour.city)
+    tours: TourEntity[];
 
-    @ManyToOne(() => Country, (country) => country.cities, {
+    @ManyToOne(() => CountryEntity, (country) => country.cities, {
         cascade: true,
         eager: true,
     })
-    country: Country;
+    country: CountryEntity;
 }

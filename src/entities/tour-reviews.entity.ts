@@ -5,11 +5,11 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { Tour } from "./tour.entity";
-import { User } from "./user.entity";
+import { TourEntity } from "./tour.entity";
+import { UserEntity } from "./user.entity";
 
 @Entity()
-export class TourReview extends BaseEntity {
+export class TourReviewEntity extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: number;
 
@@ -22,9 +22,13 @@ export class TourReview extends BaseEntity {
     @Column()
     comments: string;
 
-    @ManyToOne(() => Tour, (tour) => tour.reviews, { onDelete: "CASCADE" })
-    tour: Tour;
+    @ManyToOne(() => TourEntity, (tour) => tour.reviews, {
+        onDelete: "CASCADE",
+    })
+    tour: TourEntity;
 
-    @ManyToOne(() => User, (user) => user.reviews, { onDelete: "CASCADE" })
-    user: User;
+    @ManyToOne(() => UserEntity, (user) => user.reviews, {
+        onDelete: "CASCADE",
+    })
+    user: UserEntity;
 }

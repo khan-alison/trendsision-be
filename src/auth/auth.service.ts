@@ -1,9 +1,11 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { scrypt } from "crypto";
-import { User } from "src/entities/user.entity";
+import { DeviceSessionEntity } from "src/entities/device-session.entity";
+import { UserEntity } from "src/entities/user.entity";
 import { CreateUserDto } from "src/users/dtos/create_user_dto";
+import { LoginMetadata } from "src/utils/constants";
 import {
     generateAccessJWT,
     generateRefreshJWT,
@@ -20,16 +22,22 @@ import { LoginDto } from "./dtos/login.dto";
 import { RefreshTokenDto } from "./dtos/refresh-token.dto";
 import { ResetPasswordDto } from "./dtos/reset-password.dto";
 import { MailService } from "./mail.service";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 
 @Injectable()
 export class AuthService {
     constructor(
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
-        private mailService: MailService
+        @InjectRepository(UserEntity)
+        private userRepository: Repository<UserEntity>,
+        @InjectRepository(DeviceSessionEntity)
+        private deviceSessionRepository: Repository<DeviceSessionEntity>,
+        private mailService: MailService,
+        @Inject(CACHE_MANAGER)
+        private cacheManager: Cache
     ) {}
 
-    async validateUser(email: string, password: string): Promise<User> {
+    async validateUser(email: string, password: string): Promise<UserEntity> {
         const user = await this.userRepository.findOne({ where: { email } });
         if (!user) {
             throw new HttpException(
@@ -37,24 +45,18 @@ export class AuthService {
                 HttpStatus.NOT_FOUND
             );
         }
-        if (user) {
-            const [salt, storedHash] = user.password.split("#");
-            const hash = (await promisify(scrypt)(
-                password,
-                salt,
-                32
-            )) as Buffer;
 
-            if (hash.toString("hex") === storedHash) {
-                return user;
-            } else {
-                throw new HttpException(
-                    "Password is invalid",
-                    HttpStatus.BAD_REQUEST
-                );
-            }
+        const [salt, storedHash] = user.password.split("#");
+        const hash = (await promisify(scrypt)(password, salt, 32)) as Buffer;
+
+        if (hash.toString("hex") !== storedHash) {
+            throw new HttpException(
+                "Password is invalid",
+                HttpStatus.BAD_REQUEST
+            );
         }
-        return null;
+
+        return user;
     }
 
     async hashPassword(password: string): Promise<string> {
@@ -77,7 +79,9 @@ export class AuthService {
         return hash.toString("hex") === storedHash;
     }
 
-    async generateResponseLoginData(user: User): Promise<LoginResponseData> {
+    async generateResponseLoginData(
+        user: UserEntity
+    ): Promise<LoginResponseData> {
         let accessToken;
         let refreshToken;
         let userData;
@@ -96,18 +100,80 @@ export class AuthService {
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
+
         return {
-            userData,
             accessToken,
             refreshToken,
+            userData,
         };
     }
 
+    async logout(userId: string, deviceId: string) {
+        const session: any = await this.deviceSessionRepository
+            .createQueryBuilder("session")
+            .leftJoinAndSelect("session.user", "user")
+            .select(["session", "user.id"])
+            .where("session.deviceId = :deviceId", { deviceId })
+            .getOne();
+
+        const user = await this.userRepository
+            .createQueryBuilder("user")
+            .where("user.id = :id", { id: userId })
+            .getOne();
+
+        if (!session || !user) {
+            throw new HttpException("You need to login", HttpStatus.FORBIDDEN);
+        }
+        const keyCache = this.getKeyCache(userId, session.id);
+
+        await this.cacheManager.set(keyCache, null);
+        await this.deviceSessionRepository.delete(session.id);
+        return {
+            message: "Logout success",
+            status: 200,
+            sessionId: deviceId,
+        };
+    }
+
+    async getDeviceSessions(userId: string) {
+        return this.deviceSessionRepository.find({
+            where: {
+                id: userId,
+            },
+            select: [
+                "id",
+                "deviceId",
+                "createdAt",
+                "ipAddress",
+                "name",
+                "ua",
+                "updatedAt",
+            ],
+        });
+    }
+
     async generateNewAccessJWT(
+        deviceId: string,
         refreshTokenDto: RefreshTokenDto
     ): Promise<GenerateAccessJWTData> {
         const { refreshToken } = refreshTokenDto;
+        const session: any = await this.deviceSessionRepository
+            .createQueryBuilder("session")
+            .select("session", "user.id")
+            .leftJoinAndSelect("session.user", "user")
+            .where("session.refreshToken = :refreshToken", { refreshToken })
+            .andWhere("session.deviceId = :deviceId", { deviceId })
+            .getOne();
 
+        if (
+            !session ||
+            new Date(session.expiredAt).valueOf() < new Date().valueOf()
+        ) {
+            throw new HttpException(
+                "Refresh token invalid",
+                HttpStatus.UNAUTHORIZED
+            );
+        }
         let payload;
         try {
             payload = await verifyRefreshJWT(refreshToken);
@@ -115,15 +181,22 @@ export class AuthService {
             throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
         }
 
-        const accessToken = generateAccessJWT(payload);
+        delete payload.exp;
+        delete payload.iat;
+
+        const accessToken = generateAccessJWT(payload, { expiresIn: 60 });
 
         return { accessToken };
     }
 
-    async signUp(userData: CreateUserDto): Promise<User> {
+    async signUp(userData: CreateUserDto): Promise<UserEntity> {
         const { email, password, passwordConfirm } = userData;
 
-        const user = await this.userRepository.findOne({ where: { email } });
+        const user = await this.userRepository
+            .createQueryBuilder("user")
+            .addSelect("user.password")
+            .where("user.email = :email", { email })
+            .getOne();
 
         if (user) {
             throw new HttpException(
@@ -157,8 +230,8 @@ export class AuthService {
         }
     }
 
-    async signIn(loginDto: LoginDto) {
-        const [user] = await this.userRepository.find({
+    async signIn(loginDto: LoginDto, loginMetaData: LoginMetadata) {
+        const user = await this.userRepository.findOne({
             where: { email: loginDto.email },
         });
         if (!user) {
@@ -178,10 +251,44 @@ export class AuthService {
         const { userData, accessToken, refreshToken } =
             await this.generateResponseLoginData(user);
 
+        const session = await this.deviceSessionRepository.findOne({
+            where: { deviceId: loginMetaData.deviceId },
+        });
+
+        if (session && new Date(session.expiredAt).getTime() < Date.now()) {
+            await this.deviceSessionRepository.delete(session.id);
+        }
+
+        if (!session || session.user.id !== user.id) {
+            const refreshTokenExpireAtMs =
+                Date.now() +
+                Number(process.env.REFRESH_TOKEN_EXPIRE_IN_SEC) * 1000;
+
+            const newDevice = new DeviceSessionEntity();
+            newDevice.createdAt = new Date(Date.now());
+            newDevice.refreshToken = session
+                ? session.refreshToken
+                : refreshToken;
+            newDevice.deviceId = loginMetaData.deviceId;
+            newDevice.ipAddress = session
+                ? session.ipAddress
+                : loginMetaData.ipAddress;
+            newDevice.ua = loginMetaData.ua;
+            newDevice.expiredAt = new Date(refreshTokenExpireAtMs);
+            newDevice.user = user;
+
+            await this.deviceSessionRepository.save(newDevice);
+        } else {
+            return {
+                refreshToken: session.refreshToken,
+            };
+        }
+
         return {
             userData,
             accessToken,
             refreshToken,
+            loginMetaData,
         };
     }
 
@@ -271,5 +378,9 @@ export class AuthService {
                 );
             }
         }
+    }
+
+    getKeyCache(userId, deviceId): string {
+        return `sk_${userId}_${deviceId}`;
     }
 }

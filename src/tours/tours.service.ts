@@ -1,24 +1,24 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { City } from "src/entities/city.entity";
-import { Country } from "src/entities/country.entity";
+import { CityEntity } from "src/entities/city.entity";
+import { CountryEntity } from "src/entities/country.entity";
 import { Repository } from "typeorm";
-import { TourImage } from "../entities/tour-image.entity";
-import { Tour } from "../entities/tour.entity";
+import { TourImageEntity } from "../entities/tour-image.entity";
+import { TourEntity } from "../entities/tour.entity";
 import { CreateTourDTO } from "./dtos/create-tour/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
 
 @Injectable()
 export class ToursService {
     constructor(
-        @InjectRepository(TourImage)
-        private tourImageRepository: Repository<TourImage>,
-        @InjectRepository(Tour)
-        private toursRepository: Repository<Tour>,
-        @InjectRepository(City)
-        private tourCityRepository: Repository<City>,
-        @InjectRepository(Country)
-        private tourCountryRepository: Repository<Country>
+        @InjectRepository(TourImageEntity)
+        private tourImageRepository: Repository<TourImageEntity>,
+        @InjectRepository(TourEntity)
+        private toursRepository: Repository<TourEntity>,
+        @InjectRepository(CityEntity)
+        private tourCityRepository: Repository<CityEntity>,
+        @InjectRepository(CountryEntity)
+        private tourCountryRepository: Repository<CountryEntity>
     ) {
         this.toursRepository = toursRepository;
         this.tourImageRepository = tourImageRepository;
@@ -28,7 +28,7 @@ export class ToursService {
         filter?: any,
         page?: number,
         limit?: number
-    ): Promise<Tour[]> {
+    ): Promise<TourEntity[]> {
         const queryBuilder = this.toursRepository.createQueryBuilder("tour");
 
         if (filter) {
@@ -102,7 +102,7 @@ export class ToursService {
         return tours;
     }
 
-    async getTourById(id: string): Promise<Tour> {
+    async getTourById(id: string): Promise<TourEntity> {
         const tour = await this.toursRepository.findOne({ where: { id } });
 
         if (!tour) {
@@ -114,7 +114,7 @@ export class ToursService {
         return tour;
     }
 
-    async createTour(createTourDto: CreateTourDTO): Promise<Tour> {
+    async createTour(createTourDto: CreateTourDTO): Promise<TourEntity> {
         const {
             name,
             duration,
@@ -141,7 +141,7 @@ export class ToursService {
                 where: { name: city.country.name },
             });
 
-            const tour = new Tour();
+            const tour = new TourEntity();
             tour.name = name;
             tour.duration = duration;
             tour.maxGroupSize = maxGroupSize;
@@ -169,7 +169,7 @@ export class ToursService {
 
             if (images && images.length > 0) {
                 const tourImages = images.map((image) => {
-                    const tourImage = new TourImage();
+                    const tourImage = new TourImageEntity();
                     tourImage.image = image.image;
                     tourImage.tour = savedTour.id;
                     return tourImage;
@@ -194,7 +194,10 @@ export class ToursService {
         }
     }
 
-    async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tour> {
+    async updateTour(
+        id: string,
+        updateTourDto: UpdateTourDto
+    ): Promise<TourEntity> {
         const tour = await this.getTourById(id);
         if (!tour) {
             throw new HttpException(

@@ -1,9 +1,9 @@
-import { User } from "src/entities/user.entity";
+import { UserEntity } from "src/entities/user.entity";
 
 export interface LoginResponseData {
     accessToken: string;
     refreshToken: string;
-    userData: User;
+    userData: UserEntity;
 }
 
 export interface GenerateAccessJWTData {
