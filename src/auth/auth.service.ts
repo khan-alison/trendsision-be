@@ -255,13 +255,17 @@ export class AuthService {
             where: { deviceId: loginMetaData.deviceId },
         });
 
+        if (session && new Date(session.expiredAt).getTime() < Date.now()) {
+            await this.deviceSessionRepository.delete(session.id);
+        }
+
         if (!session || session.user.id !== user.id) {
-            const createdAtMs = user.createdAt.getTime();
             const refreshTokenExpireAtMs =
-                createdAtMs +
+                Date.now() +
                 Number(process.env.REFRESH_TOKEN_EXPIRE_IN_SEC) * 1000;
+
             const newDevice = new DeviceSessionEntity();
-            newDevice.createdAt = user.createdAt;
+            newDevice.createdAt = new Date(Date.now());
             newDevice.refreshToken = session
                 ? session.refreshToken
                 : refreshToken;

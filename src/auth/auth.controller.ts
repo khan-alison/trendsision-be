@@ -1,21 +1,23 @@
 import {
     Body,
     Controller,
+    Get,
     Headers,
     HttpCode,
     HttpStatus,
     Patch,
     Post,
     Req,
-    Get,
     UseGuards,
     ValidationPipe,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserDecorator } from "src/decorators/current-user.decorator";
+import { DeviceSessionEntity } from "src/entities/device-session.entity";
 import { UserEntity } from "src/entities/user.entity";
 import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 import { CreateUserDto } from "src/users/dtos/create_user_dto";
+import { LoginMetadata } from "src/utils/constants";
 import { LocalAuthGuard } from "../guards/local-auth.guard";
 import { AuthService } from "./auth.service";
 import { ChangePasswordDto } from "./dtos/change-password.dto";
@@ -23,11 +25,11 @@ import { ForgotPasswordDto } from "./dtos/forgot-password.dto";
 import { LoginDto } from "./dtos/login.dto";
 import { RefreshTokenDto } from "./dtos/refresh-token.dto";
 import { ResetPasswordDto } from "./dtos/reset-password.dto";
-import { LoginMetadata } from "src/utils/constants";
-import { DeviceSessionEntity } from "src/entities/device-session.entity";
+import { SkipThrottle } from "@nestjs/throttler";
 
 @Controller("auth")
 @ApiTags("auth")
+@SkipThrottle()
 export class AuthController {
     constructor(private authService: AuthService) {}
     @Post("/signup")

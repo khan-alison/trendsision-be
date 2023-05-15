@@ -9,6 +9,8 @@ import { AuthService } from "./auth.service";
 import { MailService } from "./mail.service";
 import { DeviceSessionEntity } from "src/entities/device-session.entity";
 import { CacheModule } from "@nestjs/cache-manager";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard } from "@nestjs/throttler";
 
 @Module({
     imports: [
@@ -17,7 +19,16 @@ import { CacheModule } from "@nestjs/cache-manager";
         CacheModule.register(),
         TypeOrmModule.forFeature([UserEntity, DeviceSessionEntity]),
     ],
-    providers: [AuthService, LocalStrategy, JwtStrategy, MailService],
+    providers: [
+        AuthService,
+        LocalStrategy,
+        JwtStrategy,
+        MailService,
+        {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+        },
+    ],
     exports: [AuthService],
 })
 export class AuthModule {}
