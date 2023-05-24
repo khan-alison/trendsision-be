@@ -29,7 +29,7 @@ export class TourEntity extends BaseEntity {
     @Column()
     difficulty: string;
 
-    @Column()
+    @Column("double")
     ratingsAverage: number;
 
     @Column()
@@ -82,6 +82,6 @@ export class TourEntity extends BaseEntity {
     })
     comments: TourCommentEntity[];
 
-    @OneToMany(() => TourReviewEntity, (review) => review.tour, { eager: true })
+    @OneToMany(() => TourReviewEntity, (review) => review.tour)
     reviews: TourReviewEntity[];
 }

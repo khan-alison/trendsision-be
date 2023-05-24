@@ -5,13 +5,11 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthController } from "./auth/auth.controller";
 import { AuthModule } from "./auth/auth.module";
-import { ReviewsController } from "./reviews/reviews.controller";
-import { ReviewsModule } from "./reviews/reviews.module";
-import { ReviewsService } from "./reviews/reviews.service";
 import { ToursModule } from "./tours/tours.module";
 import { UsersModule } from "./users/users.module";
 import { CustomNotFoundExceptionFilter } from "./utils/custom-not-found-exception.filter";
 import { JwtExpiredExceptionFilter } from "./utils/jwtExpired.exception";
+import { ReviewsModule } from "./reviews/reviews.module";
 
 @Module({
     imports: [
@@ -34,10 +32,9 @@ import { JwtExpiredExceptionFilter } from "./utils/jwtExpired.exception";
             limit: 10,
         }),
     ],
-    controllers: [AuthController, ReviewsController],
+    controllers: [AuthController],
     providers: [
         JwtService,
-        ReviewsService,
         {
             provide: APP_FILTER,
             useClass: CustomNotFoundExceptionFilter,
