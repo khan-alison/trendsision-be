@@ -11,24 +11,25 @@ import { UserEntity } from "./user.entity";
 @Entity()
 export class TourReviewEntity extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
-    id: number;
+    id: string;
 
-    @Column()
-    userName: string;
-
-    @Column()
+    @Column("decimal", { precision: 2, scale: 1 })
     rating: number;
 
     @Column()
-    comments: string;
+    comment: string;
 
-    @ManyToOne(() => TourEntity, (tour) => tour.reviews, {
-        onDelete: "CASCADE",
-    })
+    @ManyToOne(() => TourEntity, (tour) => tour.reviews)
     tour: TourEntity;
 
+    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    createAt: Date;
+
+    @Column()
+    updateAt: Date;
+
     @ManyToOne(() => UserEntity, (user) => user.reviews, {
-        onDelete: "CASCADE",
+        cascade: true,
     })
     user: UserEntity;
 }
