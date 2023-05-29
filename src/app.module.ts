@@ -19,6 +19,7 @@ import { ReviewsModule } from "./reviews/reviews.module";
             port: 3306,
             username: "root",
             password: "./khanh2001",
+            // database: "test_trendsision",
             database: "trendsision_db",
             entities: ["dist/**/*.entity.{ts,js}"],
             synchronize: true,

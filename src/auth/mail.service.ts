@@ -1,6 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import * as nodemailer from "nodemailer";
-import { UserEntity } from "src/entities/user.entity";
+import { User } from "src/entities/user.entity";
 
 @Injectable()
 export class MailService {
@@ -18,9 +18,9 @@ export class MailService {
         });
     }
 
-    async send(user: UserEntity, forgotLink: string): Promise<void> {
+    async send(user: User, forgotLink: string): Promise<void> {
         try {
-            await this.transporter.sendMail({
+            const mailOptions: nodemailer.SendMailOptions = {
                 from: "Khanh",
                 to: user.email,
                 subject: "Forgot Password",
@@ -29,9 +29,13 @@ export class MailService {
                     <p>Please use this <a href="${forgotLink}">link</a> to reset your password.</p>
                     <p>This link only valid on 5 minutes after you get an email.</p>
                 `,
-            });
+            };
+            await this.transporter.sendMail(mailOptions);
         } catch (error) {
-            throw new Error("Error sending email");
+            throw new HttpException(
+                "Error sending email",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

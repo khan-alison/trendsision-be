@@ -1,15 +1,18 @@
 import {
     BaseEntity,
     Column,
+    CreateDateColumn,
     Entity,
+    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    UpdateDateColumn,
 } from "typeorm";
-import { TourEntity } from "./tour.entity";
-import { UserEntity } from "./user.entity";
+import { Tour } from "./tour.entity";
+import { User } from "./user.entity";
 
 @Entity()
-export class TourReviewEntity extends BaseEntity {
+export class TourReview extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
@@ -19,17 +22,33 @@ export class TourReviewEntity extends BaseEntity {
     @Column()
     comment: string;
 
-    @ManyToOne(() => TourEntity, (tour) => tour.reviews)
-    tour: TourEntity;
-
-    @Column({ default: () => "CURRENT_TIMESTAMP" })
+    @CreateDateColumn({ name: "create_at" })
     createAt: Date;
 
-    @Column()
+    @UpdateDateColumn({ name: "update_at" })
     updateAt: Date;
 
-    @ManyToOne(() => UserEntity, (user) => user.reviews, {
+    @Column({ name: "user_id" })
+    userId: string;
+
+    @Column({ name: "tour_id" })
+    tourId: string;
+
+    @ManyToOne(() => User, (user) => user.reviews, {
         cascade: true,
+        onDelete: "CASCADE",
     })
-    user: UserEntity;
+    @JoinColumn({
+        name: "user_id",
+    })
+    user: User;
+
+    @ManyToOne(() => Tour, (tour) => tour.reviews, {
+        cascade: true,
+        onDelete: "CASCADE",
+    })
+    @JoinColumn({
+        name: "tour_id",
+    })
+    tour: Tour;
 }

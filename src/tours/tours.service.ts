@@ -1,24 +1,24 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { CityEntity } from "src/entities/city.entity";
-import { CountryEntity } from "src/entities/country.entity";
+import { City } from "src/entities/city.entity";
+import { Country } from "src/entities/country.entity";
 import { Repository } from "typeorm";
-import { TourImageEntity } from "../entities/tour-image.entity";
-import { TourEntity } from "../entities/tour.entity";
+import { TourImage } from "../entities/tour-image.entity";
+import { Tour } from "../entities/tour.entity";
 import { CreateTourDTO } from "./dtos/create-tour/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
 
 @Injectable()
 export class ToursService {
     constructor(
-        @InjectRepository(TourImageEntity)
-        private tourImageRepository: Repository<TourImageEntity>,
-        @InjectRepository(TourEntity)
-        private toursRepository: Repository<TourEntity>,
-        @InjectRepository(CityEntity)
-        private tourCityRepository: Repository<CityEntity>,
-        @InjectRepository(CountryEntity)
-        private tourCountryRepository: Repository<CountryEntity>
+        @InjectRepository(TourImage)
+        private tourImageRepository: Repository<TourImage>,
+        @InjectRepository(Tour)
+        private toursRepository: Repository<Tour>,
+        @InjectRepository(City)
+        private tourCityRepository: Repository<City>,
+        @InjectRepository(Country)
+        private tourCountryRepository: Repository<Country>
     ) {
         this.toursRepository = toursRepository;
         this.tourImageRepository = tourImageRepository;
@@ -28,8 +28,13 @@ export class ToursService {
         filter?: any,
         page?: number,
         limit?: number
-    ): Promise<TourEntity[]> {
-        const queryBuilder = this.toursRepository.createQueryBuilder("tour");
+    ): Promise<Tour[]> {
+        const queryBuilder = this.toursRepository
+            .createQueryBuilder("tour")
+            .leftJoinAndSelect("tour.images", "image")
+            .leftJoinAndSelect("tour.guiders", "guider")
+            .leftJoinAndSelect("tour.customers", "customer")
+            .leftJoinAndSelect("tour.city", "city");
 
         if (filter) {
             if (filter.minPrice && filter.maxPrice) {
@@ -40,14 +45,18 @@ export class ToursService {
                         maxPrice: filter.maxPrice,
                     }
                 );
-            } else if (filter.minPrice) {
-                queryBuilder.andWhere("tour.price >= :minPrice", {
-                    minPrice: filter.minPrice,
-                });
-            } else if (filter.maxPrice) {
-                queryBuilder.andWhere("tour.price <= :maxPrice", {
-                    maxPrice: filter.maxPrice,
-                });
+            } else {
+                if (filter.minPrice) {
+                    queryBuilder.andWhere("tour.price >= :minPrice", {
+                        minPrice: filter.minPrice,
+                    });
+                }
+
+                if (filter.maxPrice) {
+                    queryBuilder.andWhere("tour.price <= :maxPrice", {
+                        maxPrice: filter.maxPrice,
+                    });
+                }
             }
 
             if (filter.difficulty) {
@@ -59,7 +68,9 @@ export class ToursService {
             if (filter.ratingsAverage) {
                 queryBuilder.andWhere(
                     "tour.ratingsAverage >= :ratingsAverage",
-                    { ratingsAverage: filter.ratingsAverage }
+                    {
+                        ratingsAverage: filter.ratingsAverage,
+                    }
                 );
             }
 
@@ -77,14 +88,18 @@ export class ToursService {
                         maxDuration: filter.maxDuration,
                     }
                 );
-            } else if (filter.minDuration) {
-                queryBuilder.andWhere("tour.duration >= :minDuration", {
-                    minDuration: filter.minDuration,
-                });
-            } else if (filter.maxDuration) {
-                queryBuilder.andWhere("tour.duration <= :maxDuration", {
-                    maxDuration: filter.maxDuration,
-                });
+            } else {
+                if (filter.minDuration) {
+                    queryBuilder.andWhere("tour.duration >= :minDuration", {
+                        minDuration: filter.minDuration,
+                    });
+                }
+
+                if (filter.maxDuration) {
+                    queryBuilder.andWhere("tour.duration <= :maxDuration", {
+                        maxDuration: filter.maxDuration,
+                    });
+                }
             }
         }
 
@@ -92,17 +107,12 @@ export class ToursService {
             queryBuilder.skip((page - 1) * limit).take(limit);
         }
 
-        const tours = await queryBuilder
-            .leftJoinAndSelect("tour.images", "image")
-            .leftJoinAndSelect("tour.guiders", "guider")
-            .leftJoinAndSelect("tour.customers", "customer")
-            .leftJoinAndSelect("tour.city", "city")
-            .getMany();
+        const tours = await queryBuilder.getMany();
 
         return tours;
     }
 
-    async getTourById(id: string): Promise<TourEntity> {
+    async getTourById(id: string): Promise<Tour> {
         const tour = await this.toursRepository.findOne({ where: { id } });
 
         if (!tour) {
@@ -114,7 +124,7 @@ export class ToursService {
         return tour;
     }
 
-    async createTour(createTourDto: CreateTourDTO): Promise<TourEntity> {
+    async createTour(createTourDto: CreateTourDTO): Promise<Tour> {
         const {
             name,
             duration,
@@ -131,15 +141,29 @@ export class ToursService {
         } = createTourDto;
 
         try {
-            const tourCity = await this.tourCityRepository.findOne({
+            let tourCity = await this.tourCityRepository.findOne({
                 where: { name: city.name },
             });
 
-            const country = await this.tourCountryRepository.findOne({
-                where: { name: city.country.name },
-            });
+            const tour = new Tour();
+            if (!tourCity) {
+                let tourCountry = await this.tourCountryRepository.findOne({
+                    where: { name: city.country.name },
+                });
 
-            const tour = new TourEntity();
+                if (!tourCountry) {
+                    tourCountry = this.tourCountryRepository.create({
+                        name: city.country.name,
+                    });
+                    await this.tourCountryRepository.save(tourCountry);
+                }
+
+                tourCity = this.tourCityRepository.create({
+                    name: city.name,
+                    country: tourCountry,
+                });
+                await this.tourCityRepository.save(tourCity);
+            }
             tour.name = name;
             tour.duration = duration;
             tour.maxGroupSize = maxGroupSize;
@@ -152,22 +176,13 @@ export class ToursService {
             tour.coverImage = coverImage;
             tour.startDate = startDate;
             tour.endDate = endDate;
-            tour.city = tourCity
-                ? tourCity
-                : this.tourCityRepository.create({
-                      name: city.name,
-                      country: country
-                          ? country
-                          : this.tourCountryRepository.create({
-                                name: city.country.name,
-                            }),
-                  });
+            tour.city = tourCity;
 
             const savedTour = await this.toursRepository.save(tour);
 
             if (images && images.length > 0) {
                 const tourImages = images.map((image) => {
-                    const tourImage = new TourImageEntity();
+                    const tourImage = new TourImage();
                     tourImage.image = image.image;
                     tourImage.tour = savedTour.id;
                     return tourImage;
@@ -192,10 +207,7 @@ export class ToursService {
         }
     }
 
-    async updateTour(
-        id: string,
-        updateTourDto: UpdateTourDto
-    ): Promise<TourEntity> {
+    async updateTour(id: string, updateTourDto: UpdateTourDto): Promise<Tour> {
         const tour = await this.getTourById(id);
         if (!tour) {
             throw new HttpException(

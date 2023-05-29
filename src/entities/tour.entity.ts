@@ -2,18 +2,19 @@ import {
     BaseEntity,
     Column,
     Entity,
+    JoinColumn,
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { CityEntity } from "./city.entity";
-import { TourImageEntity } from "./tour-image.entity";
-import { UserEntity } from "./user.entity";
-import { TourReviewEntity } from "./tour-reviews.entity";
-import { TourCommentEntity } from "./tour-comments.entity";
+import { City } from "./city.entity";
+import { TourImage } from "./tour-image.entity";
+import { User } from "./user.entity";
+import { TourReview } from "./tour-reviews.entity";
+import { TourComment } from "./tour-comments.entity";
 
 @Entity()
-export class TourEntity extends BaseEntity {
+export class Tour extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
@@ -23,16 +24,16 @@ export class TourEntity extends BaseEntity {
     @Column()
     duration: number;
 
-    @Column()
+    @Column({ name: "max_group_size" })
     maxGroupSize: number;
 
     @Column()
     difficulty: string;
 
-    @Column("double")
+    @Column({ name: "ratings_average", type: "double" })
     ratingsAverage: number;
 
-    @Column()
+    @Column({ name: "ratings_quantity" })
     ratingsQuantity: number;
 
     @Column()
@@ -44,44 +45,42 @@ export class TourEntity extends BaseEntity {
     @Column({ type: "text" })
     description: string;
 
-    @Column()
+    @Column({ name: "cover_image" })
     coverImage: string;
 
-    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+    @Column({
+        name: "start_date",
+        type: "timestamp",
+        default: () => "CURRENT_TIMESTAMP",
+    })
     startDate: Date;
 
-    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+    @Column({
+        name: "end_date",
+        type: "timestamp",
+        default: () => "CURRENT_TIMESTAMP",
+    })
     endDate: Date;
 
-    @ManyToOne(() => CityEntity, (city) => city.tours, {
-        eager: true,
-        cascade: true,
-    })
-    city: CityEntity;
+    @Column({ name: "city_id" })
+    cityId: string;
 
-    @OneToMany(() => UserEntity, (user) => user.staffTours, {
-        cascade: true,
-        eager: true,
-    })
-    guiders: UserEntity[];
+    @ManyToOne(() => City, (city) => city.tours)
+    @JoinColumn({ name: "city_id" })
+    city: City;
 
-    @OneToMany(() => UserEntity, (user) => user.clientTours, {
-        cascade: true,
-        eager: true,
-    })
-    customers: UserEntity[];
+    @OneToMany(() => User, (user) => user.staffTours)
+    guiders: User[];
 
-    @OneToMany(() => TourImageEntity, (tourImage) => tourImage.tour, {
-        cascade: ["insert", "update"],
-        eager: true,
-    })
-    images: TourImageEntity[];
+    @OneToMany(() => User, (user) => user.clientTours)
+    customers: User[];
 
-    @OneToMany(() => TourCommentEntity, (comment) => comment.tour, {
-        eager: true,
-    })
-    comments: TourCommentEntity[];
+    @OneToMany(() => TourImage, (tourImage) => tourImage.tour)
+    images: TourImage[];
 
-    @OneToMany(() => TourReviewEntity, (review) => review.tour)
-    reviews: TourReviewEntity[];
+    @OneToMany(() => TourComment, (comment) => comment.tour)
+    comments: TourComment[];
+
+    @OneToMany(() => TourReview, (review) => review.tour)
+    reviews: TourReview[];
 }
