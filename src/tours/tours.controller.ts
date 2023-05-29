@@ -7,7 +7,6 @@ import {
     Patch,
     Post,
     Query,
-    UseFilters,
     UseGuards,
 } from "@nestjs/common";
 import {
@@ -22,22 +21,20 @@ import {
     ApiTags,
     ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
+import { SkipThrottle } from "@nestjs/throttler";
 import { Roles } from "src/decorators/roles.decorator";
 import { JwtAuthGuard } from "src/guards/jwt-auth.guard";
 import { RolesGuard } from "src/guards/roles.guard";
 import { ROLES } from "src/utils/constants";
-import { HttpExceptionFilter } from "src/utils/http_exception.filter";
-import { TourEntity } from "../entities/tour.entity";
+import { Tour } from "../entities/tour.entity";
 import { CreateTourDTO } from "./dtos/create-tour/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
 import { ToursService } from "./tours.service";
-import { SkipThrottle } from "@nestjs/throttler";
 
 @Controller("tours")
 @ApiTags("tours")
 @ApiBearerAuth()
 @SkipThrottle()
-@UseFilters(new HttpExceptionFilter())
 export class ToursController {
     constructor(private readonly toursService: ToursService) {}
 
@@ -104,7 +101,7 @@ export class ToursController {
     @ApiNoContentResponse({
         description: "This endpoint does not require a request body.",
     })
-    async getAllTour(@Query() query: any): Promise<TourEntity[]> {
+    async getAllTour(@Query() query: any): Promise<Tour[]> {
         const { page, limit } = query;
 
         const filter = {
@@ -136,7 +133,7 @@ export class ToursController {
         status: 200,
         description: "The retrieved tour.",
     })
-    getTourById(@Param("id") id: string): Promise<TourEntity> {
+    getTourById(@Param("id") id: string): Promise<Tour> {
         return this.toursService.getTourById(id);
     }
 
@@ -144,6 +141,8 @@ export class ToursController {
     @Roles(ROLES.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiOperation({ summary: "Create a new tour." })
+    @ApiUnauthorizedResponse({ description: "Unauthorized." })
+    @ApiForbiddenResponse({ description: "Forbidden." })
     @ApiBody({
         type: CreateTourDTO,
         examples: {
@@ -179,9 +178,7 @@ export class ToursController {
             },
         },
     })
-    @ApiUnauthorizedResponse({ description: "Unauthorized." })
-    @ApiForbiddenResponse({ description: "Forbidden." })
-    createTour(@Body() createTourDto: CreateTourDTO): Promise<TourEntity> {
+    createTour(@Body() createTourDto: CreateTourDTO): Promise<Tour> {
         return this.toursService.createTour(createTourDto);
     }
 
@@ -189,6 +186,8 @@ export class ToursController {
     @Roles(ROLES.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiOperation({ summary: "Deletes a tour by ID." })
+    @ApiUnauthorizedResponse({ description: "Unauthorized." })
+    @ApiForbiddenResponse({ description: "Forbidden." })
     @ApiParam({
         name: "id",
         type: "string",
@@ -198,8 +197,6 @@ export class ToursController {
         status: 204,
         description: "The tour was successfully deleted.",
     })
-    @ApiUnauthorizedResponse({ description: "Unauthorized." })
-    @ApiForbiddenResponse({ description: "Forbidden." })
     deleteTour(@Param("id") id: string): Promise<void> {
         return this.toursService.deleteTour(id);
     }
@@ -208,6 +205,8 @@ export class ToursController {
     @Roles(ROLES.ADMIN, ROLES.LEAD_GUIDE)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiOperation({ summary: "Updates a tour by ID." })
+    @ApiUnauthorizedResponse({ description: "Unauthorized." })
+    @ApiForbiddenResponse({ description: "Forbidden." })
     @ApiParam({
         name: "id",
         type: "string",
@@ -228,14 +227,12 @@ export class ToursController {
     @ApiResponse({
         status: 200,
         description: "The updated tour.",
-        type: TourEntity,
+        type: Tour,
     })
-    @ApiUnauthorizedResponse({ description: "Unauthorized." })
-    @ApiForbiddenResponse({ description: "Forbidden." })
     async updateTour(
         @Param("id") id: string,
         @Body() updateTourDto: UpdateTourDto
-    ): Promise<TourEntity> {
+    ): Promise<Tour> {
         return this.toursService.updateTour(id, updateTourDto);
     }
 }

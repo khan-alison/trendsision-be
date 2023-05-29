@@ -1,14 +1,24 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { CityEntity } from "./city.entity";
+import {
+    BaseEntity,
+    Column,
+    Entity,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from "typeorm";
+import { City } from "./city.entity";
 
 @Entity()
-export class CountryEntity {
+export class Country extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
     @Column()
     name: string;
 
-    @OneToMany(() => CityEntity, (city) => city.country)
-    cities: CityEntity[];
+    @OneToMany(() => City, (city) => city.country, {
+        cascade: true,
+        eager: true,
+        onDelete: "CASCADE",
+    })
+    cities: City[];
 }

@@ -1,27 +1,36 @@
 import {
+    BaseEntity,
     Column,
     Entity,
+    JoinColumn,
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
-import { CountryEntity } from "./country.entity";
-import { TourEntity } from "./tour.entity";
+import { Country } from "./country.entity";
+import { Tour } from "./tour.entity";
 
 @Entity()
-export class CityEntity {
+export class City extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
     @Column()
     name: string;
 
-    @OneToMany(() => TourEntity, (tour) => tour.city)
-    tours: TourEntity[];
-
-    @ManyToOne(() => CountryEntity, (country) => country.cities, {
-        cascade: true,
+    @OneToMany(() => Tour, (tour) => tour.city, {
         eager: true,
+        cascade: true,
+        onDelete: "CASCADE",
     })
-    country: CountryEntity;
+    tours: Tour[];
+
+    @Column({ name: "country_id" })
+    countryId: string;
+
+    @ManyToOne(() => Country, (country) => country.cities)
+    @JoinColumn({
+        name: "country_id",
+    })
+    country: Country;
 }

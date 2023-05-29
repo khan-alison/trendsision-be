@@ -2,18 +2,19 @@ import {
     BaseEntity,
     Column,
     Entity,
+    JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
-import { UserEntity } from "./user.entity";
+import { User } from "./user.entity";
 
 @Entity()
-export class DeviceSessionEntity extends BaseEntity {
+export class DeviceSession extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column()
+    @Column({ name: "device_id" })
     deviceId: string;
 
     @Column({ nullable: true })
@@ -22,24 +23,31 @@ export class DeviceSessionEntity extends BaseEntity {
     @Column()
     ua: string;
 
-    @Column({ type: "longtext" })
+    @Column({ name: "refresh_token", type: "longtext" })
     refreshToken: string;
 
-    @Column()
+    @Column({ name: "expired_at" })
     expiredAt: Date;
 
-    @Column()
+    @Column({ name: "ip_address" })
     ipAddress: string;
 
-    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+    @Column({
+        name: "create_at",
+        type: "timestamp",
+        default: () => "CURRENT_TIMESTAMP",
+    })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: "update_at" })
     updatedAt: Date;
 
-    @ManyToOne(() => UserEntity, (user) => user.deviceSessions, {
-        eager: true,
-        cascade: true,
+    @Column({ name: "user_id" })
+    userId: string;
+
+    @ManyToOne(() => User, (user) => user.deviceSessions, {
+        onDelete: "CASCADE",
     })
-    user: UserEntity;
+    @JoinColumn({ name: "user_id" })
+    user: User;
 }

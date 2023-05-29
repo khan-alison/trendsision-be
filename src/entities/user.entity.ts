@@ -8,13 +8,13 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
-import { TourCommentEntity } from "./tour-comments.entity";
-import { TourReviewEntity } from "./tour-reviews.entity";
-import { TourEntity } from "./tour.entity";
-import { DeviceSessionEntity } from "./device-session.entity";
+import { TourComment } from "./tour-comments.entity";
+import { TourReview } from "./tour-reviews.entity";
+import { Tour } from "./tour.entity";
+import { DeviceSession } from "./device-session.entity";
 
 @Entity()
-export class UserEntity extends BaseEntity {
+export class User extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
@@ -33,27 +33,37 @@ export class UserEntity extends BaseEntity {
     @Column()
     password: string;
 
-    @Column({ nullable: true })
-    reset_token: string;
+    @Column({ name: "refresh_token", nullable: true })
+    resetToken: string;
 
-    @ManyToOne(() => TourEntity, (tour) => tour.guiders)
-    staffTours: TourEntity;
+    @ManyToOne(() => Tour, (tour) => tour.guiders, {
+        cascade: true,
+        eager: true,
+    })
+    staffTours: Tour;
 
-    @ManyToOne(() => TourEntity, (tour) => tour.customers)
-    clientTours: TourEntity;
+    @ManyToOne(() => Tour, (tour) => tour.customers, {
+        cascade: true,
+        eager: true,
+    })
+    clientTours: Tour;
 
-    @OneToMany(() => TourCommentEntity, (comment) => comment.user)
-    comments: TourCommentEntity[];
+    @OneToMany(() => TourComment, (comment) => comment.user)
+    comments: TourComment[];
 
-    @OneToMany(() => TourReviewEntity, (review) => review.user)
-    reviews: TourReviewEntity[];
+    @OneToMany(() => TourReview, (review) => review.user)
+    reviews: TourReview[];
 
-    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+    @Column({
+        name: "create_at",
+        type: "timestamp",
+        default: () => "CURRENT_TIMESTAMP",
+    })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: "update_at" })
     updatedAt: Date;
 
-    @OneToMany(() => DeviceSessionEntity, (deviceSession) => deviceSession.user)
-    deviceSessions: DeviceSessionEntity[];
+    @OneToMany(() => DeviceSession, (deviceSession) => deviceSession.user)
+    deviceSessions: DeviceSession[];
 }

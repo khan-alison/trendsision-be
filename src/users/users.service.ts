@@ -1,19 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { UserEntity } from "../entities/user.entity";
+import { User } from "../entities/user.entity";
 import { UpdateUserDto } from "./dtos/update_user.dto";
 
 @Injectable()
 export class UsersService {
     constructor(
-        @InjectRepository(UserEntity)
-        private usersRepository: Repository<UserEntity>
+        @InjectRepository(User)
+        private usersRepository: Repository<User>
     ) {
         this.usersRepository = usersRepository;
     }
 
-    async getAllUser(filter?: any): Promise<UserEntity[]> {
+    async getAllUser(filter?: any): Promise<User[]> {
         const queryBuilder = this.usersRepository.createQueryBuilder("user");
         if (filter) {
             if (filter.name) {
@@ -28,16 +28,26 @@ export class UsersService {
                 });
             }
         }
+        queryBuilder.select([
+            "user.id",
+            "user.name",
+            "user.email",
+            "user.role",
+            "user.photo",
+            "user.createdAt",
+            "user.updatedAt",
+        ]);
         const users = await queryBuilder.getMany();
+
         return users;
     }
 
-    async getCurrentUser(email: string): Promise<UserEntity> {
+    async getCurrentUser(email: string): Promise<User> {
         const user = this.getUserByEmail(email);
         return user;
     }
 
-    async getUserById(id: string): Promise<UserEntity> {
+    async getUserById(id: string): Promise<User> {
         const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
             throw new HttpException(
@@ -48,7 +58,7 @@ export class UsersService {
         return user;
     }
 
-    async getUserByEmail(email: string): Promise<UserEntity> {
+    async getUserByEmail(email: string): Promise<User> {
         const user = await this.usersRepository.findOne({ where: { email } });
         if (!user) {
             throw new HttpException(
@@ -56,13 +66,11 @@ export class UsersService {
                 HttpStatus.NOT_FOUND
             );
         }
+        delete user.password;
         return user;
     }
 
-    async updateUser(
-        id: string,
-        updateUserDto: UpdateUserDto
-    ): Promise<UserEntity> {
+    async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
         const user = await this.usersRepository.findOne({ where: { id } });
         if (!user) {
             throw new HttpException(
