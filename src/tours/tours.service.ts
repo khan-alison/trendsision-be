@@ -120,8 +120,6 @@ export class ToursService {
             duration,
             maxGroupSize,
             difficulty,
-            ratingsAverage,
-            ratingsQuantity,
             price,
             summary,
             description,
@@ -146,8 +144,8 @@ export class ToursService {
             tour.duration = duration;
             tour.maxGroupSize = maxGroupSize;
             tour.difficulty = difficulty;
-            tour.ratingsAverage = ratingsAverage;
-            tour.ratingsQuantity = ratingsQuantity;
+            tour.ratingsAverage = 0;
+            tour.ratingsQuantity = 0;
             tour.price = price;
             tour.summary = summary;
             tour.description = description;

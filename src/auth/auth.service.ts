@@ -184,7 +184,7 @@ export class AuthService {
         delete payload.exp;
         delete payload.iat;
 
-        const accessToken = generateAccessJWT(payload, { expiresIn: 60 });
+        const accessToken = generateAccessJWT(payload, { expiresIn: 1800 });
 
         return { accessToken };
     }
@@ -234,6 +234,7 @@ export class AuthService {
         const user = await this.userRepository.findOne({
             where: { email: loginDto.email },
         });
+
         if (!user) {
             throw new HttpException(
                 `User with ${loginDto.email} not found`,
@@ -251,12 +252,27 @@ export class AuthService {
         const { userData, accessToken, refreshToken } =
             await this.generateResponseLoginData(user);
 
-        const session = await this.deviceSessionRepository.findOne({
-            where: { deviceId: loginMetaData.deviceId },
-        });
+        const session = await this.deviceSessionRepository
+            .createQueryBuilder("session")
+            .where("session.deviceId = :deviceId", {
+                deviceId: loginMetaData.deviceId,
+            })
+            .andWhere("session.user.id = :userId", { userId: user.id })
+            .leftJoinAndSelect("session.user", "user")
+            .getOne();
 
-        if (session && new Date(session.expiredAt).getTime() < Date.now()) {
-            await this.deviceSessionRepository.delete(session.id);
+        if (session) {
+            if (new Date(session.expiredAt).getTime() < Date.now()) {
+                await this.deviceSessionRepository.delete(session.id);
+                throw new HttpException(
+                    "Session expried",
+                    HttpStatus.UNAUTHORIZED
+                );
+            } else if (session.user.id === user.id) {
+                return {
+                    refreshToken: session.refreshToken,
+                };
+            }
         }
 
         if (!session || session.user.id !== user.id) {
@@ -266,9 +282,7 @@ export class AuthService {
 
             const newDevice = new DeviceSessionEntity();
             newDevice.createdAt = new Date(Date.now());
-            newDevice.refreshToken = session
-                ? session.refreshToken
-                : refreshToken;
+            newDevice.refreshToken = refreshToken;
             newDevice.deviceId = loginMetaData.deviceId;
             newDevice.ipAddress = session
                 ? session.ipAddress
@@ -277,19 +291,18 @@ export class AuthService {
             newDevice.expiredAt = new Date(refreshTokenExpireAtMs);
             newDevice.user = user;
 
+            delete newDevice.user.password;
+            delete newDevice.user.reset_token;
+
             await this.deviceSessionRepository.save(newDevice);
-        } else {
+
             return {
-                refreshToken: session.refreshToken,
+                userData,
+                accessToken,
+                refreshToken,
+                loginMetaData,
             };
         }
-
-        return {
-            userData,
-            accessToken,
-            refreshToken,
-            loginMetaData,
-        };
     }
 
     async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
