@@ -31,10 +31,10 @@ export class ToursService {
     ): Promise<Tour[]> {
         const queryBuilder = this.toursRepository
             .createQueryBuilder("tour")
-            .leftJoinAndSelect("tour.images", "image")
             .leftJoinAndSelect("tour.guiders", "guider")
             .leftJoinAndSelect("tour.customers", "customer")
-            .leftJoinAndSelect("tour.cities", "city");
+            .leftJoinAndSelect("tour.cities", "city")
+            .leftJoinAndSelect("tour.images", "image");
 
         if (filter) {
             if (filter.minPrice && filter.maxPrice) {
@@ -113,7 +113,10 @@ export class ToursService {
     }
 
     async getTourById(id: string): Promise<Tour> {
-        const tour = await this.toursRepository.findOne({ where: { id } });
+        const tour = await this.toursRepository.findOne({
+            where: { id },
+            relations: ["images", "cities"],
+        });
 
         if (!tour) {
             throw new HttpException(
@@ -134,27 +137,27 @@ export class ToursService {
             summary,
             description,
             coverImage,
-            // images,
+            images,
             cities,
             startDate,
             endDate,
         } = createTourDto;
 
         try {
-            const tour = new Tour();
-
-            tour.name = name;
-            tour.duration = duration;
-            tour.maxGroupSize = maxGroupSize;
-            tour.difficulty = difficulty;
-            tour.ratingsAverage = 0;
-            tour.ratingsQuantity = 0;
-            tour.price = price;
-            tour.summary = summary;
-            tour.description = description;
-            tour.coverImage = coverImage;
-            tour.startDate = startDate;
-            tour.endDate = endDate;
+            const tour = this.toursRepository.create({
+                name,
+                duration,
+                maxGroupSize,
+                difficulty,
+                ratingsAverage: 0,
+                ratingsQuantity: 0,
+                price,
+                summary,
+                description,
+                coverImage,
+                startDate,
+                endDate,
+            });
 
             if (cities && cities.length > 0) {
                 tour.cities = [];
@@ -188,11 +191,23 @@ export class ToursService {
                 }
             }
 
+            if (images && images.length > 0) {
+                tour.images = [];
+                for (const image of images) {
+                    const tourImage = this.tourImageRepository.create({
+                        image: image.image,
+                    });
+
+                    await this.tourImageRepository.save(tourImage);
+                    tour.images.push(tourImage);
+                }
+            }
+
             const savedTour = await this.toursRepository.save(tour);
 
             return savedTour;
         } catch (error) {
-            throw error;
+            throw new HttpException("Bad request", HttpStatus.BAD_REQUEST);
         }
     }
 

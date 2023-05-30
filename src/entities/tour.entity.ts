@@ -72,7 +72,11 @@ export class Tour extends BaseEntity {
     @OneToMany(() => User, (user) => user.clientTours)
     customers: User[];
 
-    @OneToMany(() => TourImage, (tourImage) => tourImage.tour)
+    @ManyToMany(() => TourImage, (tourImage) => tourImage.tour, {
+        cascade: true,
+        onDelete: "CASCADE",
+    })
+    @JoinTable()
     images: TourImage[];
 
     @OneToMany(() => TourComment, (comment) => comment.tour)

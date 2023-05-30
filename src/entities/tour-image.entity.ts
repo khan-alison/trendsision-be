@@ -2,7 +2,7 @@ import {
     BaseEntity,
     Column,
     Entity,
-    ManyToOne,
+    ManyToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
 import { Tour } from "./tour.entity";
@@ -15,10 +15,6 @@ export class TourImage extends BaseEntity {
     @Column({ default: "default.png" })
     image: string;
 
-    @ManyToOne(() => Tour, (tour) => tour.images, {
-        onDelete: "CASCADE",
-        cascade: ["insert", "update", "remove"],
-        eager: true,
-    })
-    tour: string;
+    @ManyToMany(() => Tour)
+    tour: Tour[];
 }
