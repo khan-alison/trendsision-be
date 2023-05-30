@@ -130,6 +130,7 @@ export class ReviewsService {
         userId: string,
         updateReviewDto: UpdateReviewDto
     ): Promise<TourReview> {
+        let tour: Tour;
         const review = await this.getTourReview(reviewId, userId);
         await this.getTourById(review.tour.id);
 
@@ -144,10 +145,26 @@ export class ReviewsService {
             );
         }
 
+        if (updateReviewDto.rating) {
+            tour = await this.tourRepository.findOne({
+                where: { id: review.tourId },
+            });
+
+            const sumRatingAfterUpdate =
+                tour.ratingsAverage * tour.ratingsQuantity -
+                review.rating +
+                updateReviewDto.rating;
+
+            tour.ratingsAverage = sumRatingAfterUpdate / tour.ratingsQuantity;
+        }
+
         try {
             Object.assign(review, updateReviewDto);
             review.updateAt = new Date(Date.now());
-            this.tourReviewRepository.save(review);
+            await Promise.all([
+                this.tourReviewRepository.save(review),
+                this.tourRepository.save(tour),
+            ]);
             return review;
         } catch (error) {
             throw new HttpException(
