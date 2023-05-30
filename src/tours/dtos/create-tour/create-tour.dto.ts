@@ -56,7 +56,7 @@ export class CreateTourDTO {
     images: TourImageDto[];
 
     @IsNotEmpty()
-    city: TourCityDto;
+    cities: TourCityDto[];
 
     @IsDateString()
     startDate: Date;

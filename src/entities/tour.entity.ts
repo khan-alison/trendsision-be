@@ -2,16 +2,16 @@ import {
     BaseEntity,
     Column,
     Entity,
-    JoinColumn,
-    ManyToOne,
+    JoinTable,
+    ManyToMany,
     OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
 import { City } from "./city.entity";
-import { TourImage } from "./tour-image.entity";
-import { User } from "./user.entity";
-import { TourReview } from "./tour-reviews.entity";
 import { TourComment } from "./tour-comments.entity";
+import { TourImage } from "./tour-image.entity";
+import { TourReview } from "./tour-reviews.entity";
+import { User } from "./user.entity";
 
 @Entity()
 export class Tour extends BaseEntity {
@@ -62,12 +62,9 @@ export class Tour extends BaseEntity {
     })
     endDate: Date;
 
-    @Column({ name: "city_id" })
-    cityId: string;
-
-    @ManyToOne(() => City, (city) => city.tours)
-    @JoinColumn({ name: "city_id" })
-    city: City;
+    @ManyToMany(() => City, (city) => city.tours)
+    @JoinTable()
+    cities: City[];
 
     @OneToMany(() => User, (user) => user.staffTours)
     guiders: User[];
