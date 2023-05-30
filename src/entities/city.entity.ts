@@ -3,8 +3,8 @@ import {
     Column,
     Entity,
     JoinColumn,
+    ManyToMany,
     ManyToOne,
-    OneToMany,
     PrimaryGeneratedColumn,
 } from "typeorm";
 import { Country } from "./country.entity";
@@ -18,11 +18,7 @@ export class City extends BaseEntity {
     @Column()
     name: string;
 
-    @OneToMany(() => Tour, (tour) => tour.city, {
-        eager: true,
-        cascade: true,
-        onDelete: "CASCADE",
-    })
+    @ManyToMany(() => Tour)
     tours: Tour[];
 
     @Column({ name: "country_id" })

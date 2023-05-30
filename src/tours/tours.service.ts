@@ -34,7 +34,7 @@ export class ToursService {
             .leftJoinAndSelect("tour.images", "image")
             .leftJoinAndSelect("tour.guiders", "guider")
             .leftJoinAndSelect("tour.customers", "customer")
-            .leftJoinAndSelect("tour.city", "city");
+            .leftJoinAndSelect("tour.cities", "city");
 
         if (filter) {
             if (filter.minPrice && filter.maxPrice) {
@@ -134,36 +134,15 @@ export class ToursService {
             summary,
             description,
             coverImage,
-            images,
-            city,
+            // images,
+            cities,
             startDate,
             endDate,
         } = createTourDto;
 
         try {
-            let tourCity = await this.tourCityRepository.findOne({
-                where: { name: city.name },
-            });
-
             const tour = new Tour();
-            if (!tourCity) {
-                let tourCountry = await this.tourCountryRepository.findOne({
-                    where: { name: city.country.name },
-                });
 
-                if (!tourCountry) {
-                    tourCountry = this.tourCountryRepository.create({
-                        name: city.country.name,
-                    });
-                    await this.tourCountryRepository.save(tourCountry);
-                }
-
-                tourCity = this.tourCityRepository.create({
-                    name: city.name,
-                    country: tourCountry,
-                });
-                await this.tourCityRepository.save(tourCity);
-            }
             tour.name = name;
             tour.duration = duration;
             tour.maxGroupSize = maxGroupSize;
@@ -176,20 +155,41 @@ export class ToursService {
             tour.coverImage = coverImage;
             tour.startDate = startDate;
             tour.endDate = endDate;
-            tour.city = tourCity;
+
+            if (cities && cities.length > 0) {
+                tour.cities = [];
+
+                for (const city of cities) {
+                    let tourCity = await this.tourCityRepository.findOne({
+                        where: { name: city.name },
+                    });
+
+                    if (!tourCity) {
+                        let tourCountry =
+                            await this.tourCountryRepository.findOne({
+                                where: { name: city.country.name },
+                            });
+
+                        if (!tourCountry) {
+                            tourCountry = this.tourCountryRepository.create({
+                                name: city.country.name,
+                            });
+                            await this.tourCountryRepository.save(tourCountry);
+                        }
+
+                        tourCity = this.tourCityRepository.create({
+                            name: city.name,
+                            country: tourCountry,
+                        });
+                        await this.tourCityRepository.save(tourCity);
+                    }
+
+                    tour.cities.push(tourCity);
+                }
+            }
 
             const savedTour = await this.toursRepository.save(tour);
 
-            if (images && images.length > 0) {
-                const tourImages = images.map((image) => {
-                    const tourImage = new TourImage();
-                    tourImage.image = image.image;
-                    tourImage.tour = savedTour.id;
-                    return tourImage;
-                });
-                await this.tourImageRepository.save(tourImages);
-                savedTour.images = tourImages;
-            }
             return savedTour;
         } catch (error) {
             throw error;
