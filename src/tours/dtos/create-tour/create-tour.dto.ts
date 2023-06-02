@@ -10,6 +10,7 @@ import {
 } from "class-validator";
 import { TourCityDto } from "./city-tour.dto";
 import { TourImageDto } from "./tour-image.dto";
+import { TourLocation, TourType } from "src/utils/constants";
 
 export class CreateTourDTO {
     @IsString()
@@ -19,6 +20,10 @@ export class CreateTourDTO {
     @IsNumber()
     @IsNotEmpty()
     duration: number;
+
+    @IsNumber()
+    @IsNotEmpty()
+    maxTourGuider: number;
 
     @IsNumber()
     @IsNotEmpty()
@@ -47,6 +52,12 @@ export class CreateTourDTO {
 
     @IsString()
     description: string;
+
+    @IsString()
+    tourType: TourType;
+
+    @IsString()
+    tourLocation: TourLocation;
 
     @IsString()
     @IsNotEmpty()

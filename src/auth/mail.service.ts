@@ -25,7 +25,7 @@ export class MailService {
                 to: user.email,
                 subject: "Forgot Password",
                 html: `
-                    <h3>Hello ${user.name}!</h3>
+                    <h3>Hello ${user.firstName + " " + user.lastName}!</h3>
                     <p>Please use this <a href="${forgotLink}">link</a> to reset your password.</p>
                     <p>This link only valid on 5 minutes after you get an email.</p>
                 `,

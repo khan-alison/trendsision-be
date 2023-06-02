@@ -30,6 +30,7 @@ import { Tour } from "../entities/tour.entity";
 import { CreateTourDTO } from "./dtos/create-tour/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
 import { ToursService } from "./tours.service";
+import { User } from "src/entities/user.entity";
 
 @Controller("tours")
 @ApiTags("tours")
@@ -112,10 +113,22 @@ export class ToursController {
             minDuration: query.minDuration,
             maxDuration: query.maxDuration,
             name: query.name,
+            tourType: query.tourType,
+            tourLocation: query.tourLocation,
         };
 
         return await this.toursService.getAllTour(
             filter,
+            parseInt(page),
+            parseInt(limit)
+        );
+    }
+
+    @Get("/user-registered")
+    @UseGuards(JwtAuthGuard)
+    getAllUserRegisteredTour(@Query() query: any): Promise<User[]> {
+        const { page, limit } = query;
+        return this.toursService.getAllUserRegisteredTour(
             parseInt(page),
             parseInt(limit)
         );

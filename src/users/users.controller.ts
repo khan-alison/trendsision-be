@@ -34,9 +34,7 @@ import { UsersService } from "./users.service";
 @ApiBearerAuth()
 @SkipThrottle()
 export class UserController {
-    constructor(private usersService: UsersService) {
-        this.usersService = usersService;
-    }
+    constructor(private readonly usersService: UsersService) {}
 
     @Get()
     @Roles(ROLES.ADMIN, ROLES.LEAD_GUIDE)

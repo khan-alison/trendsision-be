@@ -30,7 +30,8 @@ export class UsersService {
         }
         queryBuilder.select([
             "user.id",
-            "user.name",
+            "user.firstName",
+            "user.lastName",
             "user.email",
             "user.role",
             "user.photo",
