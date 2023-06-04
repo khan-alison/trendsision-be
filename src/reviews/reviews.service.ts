@@ -4,8 +4,8 @@ import { TourReview } from "src/entities/tour-reviews.entity";
 import { Tour } from "src/entities/tour.entity";
 import { User } from "src/entities/user.entity";
 import { Repository } from "typeorm";
-import { CreateTourReviewDto } from "./dto/create_review.dto";
-import { UpdateReviewDto } from "./dto/update_review.dto";
+import { CreateTourReviewDto } from "./dtos/create_review.dto";
+import { UpdateReviewDto } from "./dtos/update_review.dto";
 
 @Injectable()
 export class ReviewsService {

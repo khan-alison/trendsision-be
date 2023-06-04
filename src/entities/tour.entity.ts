@@ -1,17 +1,20 @@
+import { TourLocation, TourType } from "src/utils/constants";
 import {
     BaseEntity,
     Column,
+    CreateDateColumn,
     Entity,
     JoinTable,
     ManyToMany,
     OneToMany,
     PrimaryGeneratedColumn,
+    UpdateDateColumn,
 } from "typeorm";
 import { City } from "./city.entity";
 import { TourComment } from "./tour-comments.entity";
 import { TourImage } from "./tour-image.entity";
+import { TourRegistration } from "./tour-registration.entity";
 import { TourReview } from "./tour-reviews.entity";
-import { User } from "./user.entity";
 
 @Entity()
 export class Tour extends BaseEntity {
@@ -23,6 +26,9 @@ export class Tour extends BaseEntity {
 
     @Column()
     duration: number;
+
+    @Column()
+    maxTourGuider: number;
 
     @Column({ name: "max_group_size" })
     maxGroupSize: number;
@@ -62,15 +68,24 @@ export class Tour extends BaseEntity {
     })
     endDate: Date;
 
+    @CreateDateColumn({ name: "create_at" })
+    createAt: Date;
+
+    @UpdateDateColumn({ name: "update_at" })
+    updateAt: Date;
+
+    @Column({ name: "tour_type", type: "enum", enum: TourType })
+    tourType: TourType;
+
+    @Column({ name: "tour_location", type: "enum", enum: TourLocation })
+    tourLocation: TourLocation;
+
     @ManyToMany(() => City, (city) => city.tours)
     @JoinTable()
     cities: City[];
 
-    @OneToMany(() => User, (user) => user.staffTours)
-    guiders: User[];
-
-    @OneToMany(() => User, (user) => user.clientTours)
-    customers: User[];
+    @OneToMany(() => TourRegistration, (registration) => registration.tour)
+    userRegistrations: TourRegistration[];
 
     @ManyToMany(() => TourImage, (tourImage) => tourImage.tour, {
         cascade: true,

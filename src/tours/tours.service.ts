@@ -7,6 +7,7 @@ import { TourImage } from "../entities/tour-image.entity";
 import { Tour } from "../entities/tour.entity";
 import { CreateTourDTO } from "./dtos/create-tour/create-tour.dto";
 import { UpdateTourDto } from "./dtos/update-tour.dto";
+import { TourRegistration } from "src/entities/tour-registration.entity";
 
 @Injectable()
 export class ToursService {
@@ -18,7 +19,9 @@ export class ToursService {
         @InjectRepository(City)
         private tourCityRepository: Repository<City>,
         @InjectRepository(Country)
-        private tourCountryRepository: Repository<Country>
+        private tourCountryRepository: Repository<Country>,
+        @InjectRepository(TourRegistration)
+        private tourRegistrationRepository: Repository<TourRegistration>
     ) {
         this.toursRepository = toursRepository;
         this.tourImageRepository = tourImageRepository;
@@ -31,10 +34,10 @@ export class ToursService {
     ): Promise<Tour[]> {
         const queryBuilder = this.toursRepository
             .createQueryBuilder("tour")
-            .leftJoinAndSelect("tour.guiders", "guider")
-            .leftJoinAndSelect("tour.customers", "customer")
             .leftJoinAndSelect("tour.cities", "city")
-            .leftJoinAndSelect("tour.images", "image");
+            .leftJoinAndSelect("tour.images", "image")
+            .leftJoinAndSelect("tour.userRegistrations", "tour_registration")
+            .leftJoinAndSelect("tour_registration.user", "user");
 
         if (filter) {
             if (filter.minPrice && filter.maxPrice) {
@@ -77,6 +80,18 @@ export class ToursService {
             if (filter.name) {
                 queryBuilder.andWhere("tour.name LIKE :name", {
                     name: `%${filter.name}%`,
+                });
+            }
+
+            if (filter.tourType) {
+                queryBuilder.andWhere("tour.tourType LIKE :tourType", {
+                    tourType: `%${filter.tourType}%`,
+                });
+            }
+
+            if (filter.tourLocation) {
+                queryBuilder.andWhere("tour.tour_location LIKE :tourLocation", {
+                    tourLocation: `%${filter.tourLocation}%`,
                 });
             }
 
@@ -127,10 +142,32 @@ export class ToursService {
         return tour;
     }
 
+    async getAllUserRegisteredTour(
+        page?: number,
+        limit?: number
+    ): Promise<any[]> {
+        const queryBuilder = this.tourRegistrationRepository
+            .createQueryBuilder("user_registration")
+            .leftJoinAndSelect("user_registration.user", "user");
+
+        if (page && limit) {
+            queryBuilder.skip((page - 1) * limit).take(limit);
+        }
+
+        const registrations = await queryBuilder.getMany();
+        const users = registrations.map((registration) => {
+            delete registration.user.password;
+            return registration.user;
+        });
+
+        return users;
+    }
+
     async createTour(createTourDto: CreateTourDTO): Promise<Tour> {
         const {
             name,
             duration,
+            maxTourGuider,
             maxGroupSize,
             difficulty,
             price,
@@ -141,12 +178,15 @@ export class ToursService {
             cities,
             startDate,
             endDate,
+            tourType,
+            tourLocation,
         } = createTourDto;
 
         try {
             const tour = this.toursRepository.create({
                 name,
                 duration,
+                maxTourGuider,
                 maxGroupSize,
                 difficulty,
                 ratingsAverage: 0,
@@ -157,6 +197,8 @@ export class ToursService {
                 coverImage,
                 startDate,
                 endDate,
+                tourType,
+                tourLocation,
             });
 
             if (cities && cities.length > 0) {
@@ -202,7 +244,6 @@ export class ToursService {
                     tour.images.push(tourImage);
                 }
             }
-
             const savedTour = await this.toursRepository.save(tour);
 
             return savedTour;

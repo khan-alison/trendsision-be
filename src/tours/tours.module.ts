@@ -8,9 +8,18 @@ import { City } from "src/entities/city.entity";
 import { Country } from "src/entities/country.entity";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard } from "@nestjs/throttler";
+import { TourRegistration } from "src/entities/tour-registration.entity";
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Tour, TourImage, City, Country])],
+    imports: [
+        TypeOrmModule.forFeature([
+            Tour,
+            TourImage,
+            City,
+            Country,
+            TourRegistration,
+        ]),
+    ],
     controllers: [ToursController],
     providers: [
         ToursService,

@@ -3,29 +3,53 @@ import {
     BaseEntity,
     Column,
     Entity,
-    ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
-import { TourComment } from "./tour-comments.entity";
-import { TourReview } from "./tour-reviews.entity";
-import { Tour } from "./tour.entity";
 import { DeviceSession } from "./device-session.entity";
+import { TourComment } from "./tour-comments.entity";
+import { TourRegistration } from "./tour-registration.entity";
+import { TourReview } from "./tour-reviews.entity";
 
+//TODO: complete tour status
 @Entity()
 export class User extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column({ nullable: true, default: "khanhdzai" })
-    name: string;
+    @Column()
+    firstName: string;
+
+    @Column()
+    lastName: string;
 
     @Column()
     email: string;
 
     @Column({ type: "enum", enum: ROLES, default: ROLES.USER })
     role: ROLES;
+
+    @Column({ nullable: true })
+    passportNumber: string;
+
+    @Column({ nullable: true })
+    passportIssueDate: Date;
+
+    @Column({ nullable: true })
+    passportExpiryDate: Date;
+
+    @Column({ nullable: true })
+    passportCountryOfIssuance: string;
+
+    @Column({ nullable: true })
+    dietaryRestrictions: string;
+
+    @Column({ nullable: true })
+    phoneNumber: string;
+
+    @Column({ nullable: true })
+    dateOfBirth: Date;
 
     @Column({ default: "avatar.jpg" })
     photo: string;
@@ -36,17 +60,8 @@ export class User extends BaseEntity {
     @Column({ name: "refresh_token", nullable: true })
     resetToken: string;
 
-    @ManyToOne(() => Tour, (tour) => tour.guiders, {
-        cascade: true,
-        eager: true,
-    })
-    staffTours: Tour;
-
-    @ManyToOne(() => Tour, (tour) => tour.customers, {
-        cascade: true,
-        eager: true,
-    })
-    clientTours: Tour;
+    @OneToMany(() => TourRegistration, (registration) => registration.user)
+    tourRegistrations: TourRegistration[];
 
     @OneToMany(() => TourComment, (comment) => comment.user)
     comments: TourComment[];

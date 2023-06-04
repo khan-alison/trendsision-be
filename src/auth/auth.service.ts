@@ -278,7 +278,14 @@ export class AuthService {
     }
 
     async signUp(userData: CreateUserDto): Promise<User> {
-        const { email, password, passwordConfirm } = userData;
+        const {
+            dateOfBirth,
+            firstName,
+            lastName,
+            email,
+            password,
+            passwordConfirm,
+        } = userData;
 
         if (await this.isEmailInUse(email)) {
             throw new HttpException(
@@ -299,7 +306,10 @@ export class AuthService {
         let savedUser: User;
         const newUser = this.userRepository.create({
             ...userData,
+            firstName,
+            lastName,
             email,
+            dateOfBirth,
             password: hashedPassword,
         });
 
@@ -337,7 +347,7 @@ export class AuthService {
             if (new Date(session.expiredAt).getTime() < Date.now()) {
                 await this.deviceSessionRepository.delete(session.id);
                 throw new HttpException(
-                    "Session expried",
+                    "Session expired",
                     HttpStatus.UNAUTHORIZED
                 );
             }
@@ -403,7 +413,6 @@ export class AuthService {
         email: string,
         changePasswordDto: ChangePasswordDto
     ): Promise<void> {
-        //TODO:Change to different password util ... times
         const user = await this.getUserByEmail(email);
         const isOldPasswordValid = await this.checkPassword(
             changePasswordDto.oldPassword,

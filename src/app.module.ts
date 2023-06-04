@@ -10,6 +10,7 @@ import { UsersModule } from "./users/users.module";
 import { CustomNotFoundExceptionFilter } from "./utils/custom-not-found-exception.filter";
 import { JwtExpiredExceptionFilter } from "./utils/jwtExpired.exception";
 import { ReviewsModule } from "./reviews/reviews.module";
+import { TourRegisterModule } from "./tour-register/tour-register.module";
 
 @Module({
     imports: [
@@ -28,6 +29,7 @@ import { ReviewsModule } from "./reviews/reviews.module";
         UsersModule,
         AuthModule,
         ReviewsModule,
+        TourRegisterModule,
         ThrottlerModule.forRoot({
             ttl: 60,
             limit: 10,

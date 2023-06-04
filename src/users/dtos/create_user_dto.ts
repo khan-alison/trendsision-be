@@ -1,4 +1,5 @@
 import {
+    IsDateString,
     IsEmail,
     IsEnum,
     IsNotEmpty,
@@ -9,8 +10,10 @@ import { ROLES } from "src/utils/constants";
 
 export class CreateUserDto {
     @IsString()
-    @IsOptional()
-    name?: string;
+    firstName: string;
+
+    @IsString()
+    lastName: string;
 
     @IsNotEmpty()
     @IsEmail()
@@ -23,6 +26,9 @@ export class CreateUserDto {
     @IsString()
     @IsOptional()
     photo?: string;
+
+    @IsDateString()
+    dateOfBirth: Date;
 
     @IsNotEmpty()
     @IsString()
